@@ -100,8 +100,6 @@ Create a `.env` file in the project root with the following (example):
 OPENAI_API_KEY=your_api_key_here
 ```
 
-⚠️ Never commit `.env` with real secrets to GitHub.
-
 ---
 
 ## 🛡️ License
@@ -119,8 +117,6 @@ Feel free to fork this repo and open a pull request.
 
 ## 📌 Notes
 
-- Use `.gitignore` to exclude sensitive files (`.env`, `__pycache__`, executables).  
-- Large datasets or images should be stored externally or added to `.gitignore`.  
 - This project is modular — add new games by creating a Python module and linking it in `game_manager.py`.
 
 ---
