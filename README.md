@@ -34,25 +34,84 @@ An **AI-powered teaching assistant** with interactive games, chatbot prompts, im
 
 ```bash
 ai-teaching-assistant/
+├── .env.example                        # Example environment variable file
+├── .gitignore                          # Ignored files and directories
+├── .gitattributes                      # Git LFS and line-ending settings
+├── README.md                           # Main project documentation
+├── LICENSE                             # License file
 │
-├── backend/                 # Core backend modules
-├── image detector/          # Image-based learning and detection games
-├── asset/                   # Static assets (UI, media, etc.)
-├── docs/                    # Documentation
-├── indexes/                 # Index files for reference
-├── animations/              # Animation assets
-├── teachbot/                # Chatbot-related modules
+├── backend/                            # 🧩 Core backend system (FastAPI + RAG)
+│   ├── app.py                          # FastAPI server with /ask and /audio endpoints
+│   ├── teacher_chatbot.py              # Main TeacherChatbot class (STT → LLM → TTS → Rhubarb)
+│   ├── teacher_chatbot_app.py          # Backend entrypoint (integrates chatbot pipeline)
+│   ├── rag_system.py                   # Retrieval-Augmented Generation system (RAG)
+│   ├── requirements.txt                # Backend dependencies
+│   ├── templates/
+│   │   └── test.html                   # Simple frontend for testing API uploads
+│   ├── docs/                           # Educational content (ingested into RAG)
+│   │   ├── aejm101.pdf … aemr1ps.pdf   # Teaching material PDFs
+│   ├── indexes/faiss_index/            # Vector database (FAISS index)
+│   │   ├── index.faiss
+│   │   └── index.pkl
+│   └── outputs/                        # Generated TTS audio + Rhubarb phoneme JSONs
 │
-├── game_manager.py          # Main game loop/manager
-├── teacher_interface.py     # Teacher-facing interface
-├── chatbot_logic.py         # Chatbot backend logic
-├── teaching_prompts.py      # Teaching prompts and rules
-├── module_executor.py       # Runs different modules
-├── avatar_system.py         # Avatar system for engagement
-├── py_app.py                # App runner
-├── setup_api_keys.py        # Setup for API keys (⚠ don’t commit real keys)
-├── requirements.txt         # Python dependencies
-└── .env                     # Environment variables (⚠ keep private)
+├── humanoid/                           # 🧍 Frontend humanoid avatar system (React Three Fiber)
+│   └── r3f-lipsync-tutorial/           # React + Three.js + ReadyPlayerMe + Rhubarb
+│       ├── public/
+│       │   ├── animations/             # FBX animation clips (Idle, Greeting, Speaking, etc.)
+│       │   ├── audios/                 # Example test audios
+│       │   ├── models/                 # Avatar GLB model
+│       │   └── textures/               # Background images
+│       ├── src/
+│       │   ├── components/
+│       │   │   ├── Avatar.jsx          # Avatar component — handles lip sync & expressions
+│       │   │   └── Experience.jsx      # Scene setup (camera, lighting, animations)
+│       │   ├── App.jsx                 # Main React app component
+│       │   └── main.jsx                # Entry point for Vite app
+│       ├── vite.config.js              # Vite configuration
+│       └── package.json                # Frontend dependencies
+│
+├── image detector/                     # 🖼️ Interactive learning mini-games (CV-based)
+│   ├── detector.py                     # Core object detection logic
+│   ├── finger_counting_game.py         # Hand gesture recognition (counting fingers)
+│   ├── fruits_vs_vegetables.py         # Food classification game
+│   ├── healthyVSjunk.py                # Healthy vs junk food detection
+│   ├── puzzle.py                       # Simple image puzzle game
+│   ├── images/, temp_images/           # Game assets and temp storage
+│   ├── puzzle_sprites/                 # Sprite assets for puzzles
+│   └── requirements.txt                # Requirements for image detector subsystem
+│
+├── animations/                         # 🌀 GIF animations for idle/listening/speaking states
+│   ├── idle.gif
+│   ├── listening.gif
+│   ├── speaking.gif
+│   ├── thinking.gif
+│   └── index.html                      # Test page for displaying animations
+│
+├── asset/                              # ⚙️ (LFS) Model weights (not pushed to GitHub)
+│   ├── DVAE.safetensors
+│   ├── Decoder.safetensors
+│   ├── Embed.safetensors
+│   ├── Vocos.safetensors
+│   └── gpt/model.safetensors
+│
+├── requirements.txt                    # Master dependency list (for deployment)
+├── requirements_updated.txt            # Expanded dependencies (merged envs)
+│
+├── launch_teacher_interface.py         # Main launcher for full AI assistant
+├── teacher_interface.py                # GUI interface for chatbot
+├── module_executor.py                  # Runtime module manager (voice, CV, chatbot)
+├── chatbot_logic.py                    # Chat reasoning and dialogue logic
+├── setup_api_keys.py                   # Utility for setting environment variables
+├── quick_test.py                       # Script for testing API flow (STT → LLM → TTS)
+│
+├── FIXED_SPEECH_ISSUES.md              # Documentation of fixed issues in TTS/STT
+├── ISSUES_FIXED_SUMMARY.md             # Summary of fixes and known issues
+├── README_TEACHER_SYSTEM.md            # Backend system documentation
+├── SPEECH_RECOGNITION_GUIDE.md         # Guide for speech pipeline setup
+├── TEST_RESULTS.md                     # Logs and evaluation results
+└── runnotes.txt                        # Developer notes and run instructions
+
 ```
 
 ---
