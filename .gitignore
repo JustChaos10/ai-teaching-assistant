@@ -1,0 +1,91 @@
+# --- ENVIRONMENTS ---
+venv310/
+.env
+.venv/
+env/
+venv/
+ENV/
+
+# --- PYTHON CACHE ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*$py.class
+
+# --- OUTPUTS & TEMP FILES ---
+outputs/
+*.log
+*.tmp
+*.wav
+*.json
+tempCodeRunnerFile.*
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+.hypothesis/
+
+# --- DISTRIBUTION / PACKAGING ---
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# --- PYINSTALLER ---
+*.manifest
+*.spec
+
+# --- JUPYTER NOTEBOOK ---
+.ipynb_checkpoints
+
+# --- FRONTEND / NODE ---
+node_modules/
+dist/
+build/
+*.lock
+
+# --- IDEs and EDITORS ---
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.iml
+*.ipr
+*.iws
+
+# --- LOGS AND DEBUG ---
+*.log
+*.pot
+*.pyc
+
+# --- OS FILES ---
+.DS_Store
+Thumbs.db
+
+# --- OTHER FILES TO IGNORE ---
+*.exe
+
+# Large model files (excluded from GitHub)
+asset/gpt/
+asset/*.safetensors
+backup_models/
+

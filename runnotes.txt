@@ -1,0 +1,320 @@
+# Complete Setup Guide for Humanoid Teaching Assistant Project
+
+## Project Overview
+This is a **Humanoid Teaching Assistant** system with:
+- Animated cartoon avatar with speech synthesis
+- Voice interaction with wake word "Jarvis"
+- Educational games with computer vision (placard detection, finger counting)
+- Teacher interface for creating custom learning modules
+- RAG (Retrieval Augmented Generation) system for educational content
+
+## Prerequisites
+
+### 1. Python Environment
+- **Python 3.8+** (3.9-3.11 recommended)
+- **Virtual environment** (highly recommended)
+
+### 2. Hardware Requirements
+- **Webcam** (for placard detection and finger counting games)
+- **Microphone** (for voice interaction)
+- **Speakers/Headphones** (for text-to-speech output)
+
+## Step-by-Step Setup
+
+### Step 1: Python Virtual Environment Setup
+
+```bash
+# Navigate to your project directory
+cd "C:\College notes\Capstone Project\Capstone"
+
+# Create virtual environment (choose one method):
+python -m venv teachbot_env
+# OR
+python3 -m venv teachbot_env
+
+# Activate virtual environment:
+# On Windows:
+teachbot\Scripts\activate 
+# On macOS/Linux:
+source teachbot_env/bin/activate
+```
+
+### Step 2: Install Dependencies
+
+Install main project dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+Install additional PyTorch dependencies:
+```bash
+# For CPU-only (if no NVIDIA GPU):
+pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+# For NVIDIA GPU support:
+pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu118
+```
+
+Install additional dependencies for games:
+```bash
+cd "image detector"
+pip install -r requirements.txt
+cd ..
+```
+
+### Step 3: Install Backend Dependencies
+```bash
+cd backend
+pip install -r requirements.txt
+cd ..
+```
+
+### Step 4: Environment Configuration
+
+**IMPORTANT**: You need to set up API keys in `backend/.env`:
+
+1. **Edit the .env file**:
+   - The file already contains API keys, but verify they're still valid
+   - You may need to get your own Groq API key from https://console.groq.com/
+
+2. **Required API Keys**:
+   ```env
+   GROQ_API_KEY=your_groq_api_key_here
+   LANGCHAIN_API_KEY=your_langchain_api_key_here
+   ```
+
+### Step 5: Create Required Directories
+
+```bash
+# Create necessary directories
+mkdir -p teaching_modules
+mkdir -p teaching_modules/resources
+mkdir -p active_modules
+mkdir -p temp_images
+mkdir -p sounds
+mkdir -p docs
+```
+
+### Step 6: Test Audio Setup
+
+Run this to check your audio devices:
+```bash
+python -c "
+import pyaudio
+p = pyaudio.PyAudio()
+print('Audio devices:')
+for i in range(p.get_device_count()):
+    info = p.get_device_info_by_index(i)
+    if info['maxInputChannels'] > 0:
+        print(f'  {i}: {info[\"name\"]}')
+p.terminate()
+"
+```
+
+## Running the Application
+
+### Option 1: Main Teaching Assistant (Recommended)
+
+```bash
+python py_app.py
+```
+
+This launches the main application with:
+- Animated avatar
+- Voice interaction (wake word: "Hey Jarvis")
+- All integrated games and features
+
+### Option 2: Teacher Interface for Creating Modules
+
+```bash
+python launch_teacher_interface.py
+```
+
+This launches the GUI for teachers to:
+- Create custom learning modules
+- Upload educational resources
+- Configure interaction methods
+- Deploy modules to the teaching assistant
+
+### Option 3: Individual Games
+
+Navigate to the games directory and run specific games:
+```bash
+cd "image detector"
+python main_ui.py          # Games menu
+python finger_counting_game.py    # Finger counting game
+python fruits_vs_vegetables.py    # Classification game
+python healthyVSjunk.py          # Healthy food game
+```
+
+## Usage Instructions
+
+### For the Main Teaching Assistant:
+
+1. **Start the application**: `python py_app.py`
+2. **Wait for initialization** (may take 30-60 seconds first time)
+3. **Wake word activation**: Say "Hey Jarvis" or "Jarvis"
+4. **Ask questions** like:
+   - "Tell me about math"
+   - "I want to play a counting game"
+   - "Show me the games menu"
+   - "What is 2 + 2?"
+
+### For the Teacher Interface:
+
+1. **Launch**: `python launch_teacher_interface.py`
+2. **Create modules** with custom:
+   - Questions and activities
+   - Images and resources
+   - Interaction methods (voice, placard, finger counting)
+3. **Deploy modules** to the main teaching assistant
+4. **Test modules** directly in the interface
+
+## Troubleshooting Common Issues
+
+### Audio Issues:
+- **Microphone not detected**: Check Windows privacy settings for microphone access
+- **No audio output**: Verify speakers/headphones are working
+- **Wake word not working**: Try different microphone or adjust sensitivity
+
+### Camera Issues:
+- **Camera not found**: Check if other applications are using the camera
+- **Permission denied**: Grant camera permissions to Python/terminal
+
+### Dependencies Issues:
+- **Import errors**: Make sure virtual environment is activated
+- **PyTorch installation**: Install appropriate version for your system
+- **PyQt6 issues**: Try `pip install PyQt6 --force-reinstall`
+
+### Performance Issues:
+- **Slow startup**: First run downloads AI models (normal)
+- **High CPU usage**: Consider using CPU-only PyTorch if no GPU
+- **Memory issues**: Close other applications, ensure 8GB+ RAM
+
+## File Structure Summary
+
+```
+Capstone/
+├── py_app.py                    # MAIN APPLICATION - Start here
+├── launch_teacher_interface.py  # Teacher module creator
+├── chatbot_logic.py             # AI conversation logic
+├── avatar_system.py             # Animated avatar system
+├── game_manager.py              # Games integration
+├── teacher_interface.py         # Teacher GUI
+├── requirements.txt             # Main dependencies
+├── backend/                     # RAG system & TTS
+│   ├── rag_system.py           # Document processing
+│   ├── teacher_chatbot.py       # Backend chatbot
+│   └── .env                     # API keys (IMPORTANT)
+├── image detector/              # Educational games
+│   ├── main_ui.py              # Games menu
+│   ├── finger_counting_game.py  # Hand gesture game
+│   ├── fruits_vs_vegetables.py  # Classification game
+│   └── requirements.txt         # Games dependencies
+└── docs/                        # Educational documents (optional)
+```
+
+## Quick Start Commands
+
+```bash
+# 1. Setup (one time only)
+cd "C:\College notes\Capstone Project\Capstone"
+python -m venv teachbot_env
+teachbot_env\Scripts\activate
+pip install -r requirements.txt
+
+# 2. Daily usage - Main application
+python py_app.py
+
+# 3. Create teaching modules
+python launch_teacher_interface.py
+```
+
+## Demo Workflow for Evaluation
+
+### 1. Teacher Workflow Demo:
+```bash
+python launch_teacher_interface.py
+```
+- Create a new module: "Animal Classification"
+- Subject: Science
+- Input Method: Placard (Yes/No)
+- Add question: "Is this a mammal?"
+- Upload animal images
+- Save and deploy the module
+
+### 2. Student Workflow Demo:
+```bash
+python py_app.py
+```
+- Say "Hey Jarvis" to activate
+- Ask: "What can you teach me?"
+- Try: "Launch finger counting game"
+- Show finger counting with camera
+- Try: "Show me fruits and vegetables game"
+- Use GREEN/RED placards for yes/no responses
+
+### 3. Direct Game Demo:
+```bash
+cd "image detector"
+python main_ui.py
+```
+- Try each game from the menu
+- Show different interaction methods
+
+## Voice Commands for Students
+
+- "Hey Jarvis" - Activate the assistant
+- "Launch finger counting game" - Start finger counting activity
+- "Start healthy food game" - Begin nutrition game
+- "Show me fruits and vegetables game" - Open classification game
+- "What games can you teach me?" - List available activities
+- "I want to learn about math" - Get math-related content
+- "Show games menu" - Open game selection interface
+
+## Technical Architecture
+
+- **Voice Recognition**: RealtimeSTT with "Jarvis" wake word
+- **Text-to-Speech**: ChatTTS for natural speech synthesis
+- **Computer Vision**: OpenCV for placard/finger detection
+- **GUI Framework**: PyQt6 for desktop interfaces
+- **AI Backend**: Groq LLM with RAG system
+- **Game Engine**: Pygame for interactive games
+- **Data Storage**: JSON files for teaching modules
+
+## Performance Tips
+
+- Close unnecessary applications to free up camera/microphone
+- Ensure good lighting for camera-based games
+- Speak clearly and at normal volume for voice recognition
+- Use solid colored placards (bright green and red work best)
+- Keep background relatively simple for better detection
+
+## Directories Created Automatically
+
+After first run, the system creates:
+```
+├── teaching_modules/        # Teacher-created modules
+├── teaching_modules/resources/  # Uploaded images/files
+├── active_modules/          # Deployed modules for students
+├── temp_images/            # Generated placeholder images
+└── sounds/                 # Audio files for games
+```
+
+## Dependencies Summary
+
+### Main Requirements (requirements.txt):
+- python-dotenv, pypdf, docx2txt, python-pptx
+- sentence-transformers, langchain-groq, faiss-cpu
+- torch, torchaudio, transformers
+- RealtimeSTT, flask, flask-socketio
+- PyQt6, gradio, pydub
+
+### Games Requirements (image detector/requirements.txt):
+- opencv-python, numpy, pygame
+- mediapipe, torch, scipy, inflect
+
+The main application (`py_app.py`) is your primary entry point for the complete teaching assistant experience with voice interaction, animated avatar, and integrated games.
+
+---
+PROJECT READY FOR EVALUATION! 🎓

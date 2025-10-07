@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice-Only Teaching Assistant</title>
+    <style>
+        body { font-family: sans-serif; display: flex; height: 100vh; margin: 0; background-color: #f0f2f5; overflow: hidden; }
+        #main-container { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        #face {
+            width: 300px; height: 300px;
+            background-color: #b0c4de;
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 5rem;
+            transition: all 0.3s ease;
+            border: 10px solid transparent;
+        }
+        #face.listening { border-color: #add8e6; animation: pulse 2s infinite; }
+        #face.wakeword-active { border-color: #ffeb3b; animation: glow 1.5s ease-out; }
+        #face.thinking { background-color: #fffacd; }
+        #face.talking { background-color: #90ee90; }
+        #status-text { margin-top: 20px; font-size: 1.5rem; color: #555; height: 50px; }
+        #start-btn { margin-top: 20px; padding: 15px 30px; font-size: 1.2rem; border-radius: 30px; border: none; cursor: pointer; background-color: #007bff; color: white; }
+        #start-btn.listening { background-color: #dc3545; } /* Red color for stop button */
+        #start-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(173, 216, 230, 0.7); } 70% { box-shadow: 0 0 0 30px rgba(173, 216, 230, 0); } 100% { box-shadow: 0 0 0 0 rgba(173, 216, 230, 0); } }
+        @keyframes glow { 0%, 100% { box-shadow: 0 0 5px #ffeb3b; } 50% { box-shadow: 0 0 40px #ffeb3b; } }
+    </style>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+    <div id="main-container">
+        <div id="face">🤖</div>
+        <p id="status-text">Click "Start" to begin!</p>
+        <button id="start-btn">Start</button>
+    </div>
+
+    <script>
+        const socket = io();
+        const face = document.getElementById('face');
+        const statusText = document.getElementById('status-text');
+        const startBtn = document.getElementById('start-btn');
+        
+        let mediaRecorder;
+        let stream;
+        let isListening = false;
+
+        // --- WebSocket Event Listeners ---
+        socket.on('connect', () => console.log('✅ [LOG] WebSocket Connected!'));
+        socket.on('disconnect', () => console.log('❌ [LOG] WebSocket Disconnected!'));
+
+        socket.on('wakeword_detected', () => {
+            console.log("✅ [LOG] Wake word detected by server!");
+            setFaceState('wakeword-active', "I'm listening...");
+        });
+
+        socket.on('transcription_result', (data) => {
+            console.log("✅ [LOG] Transcription received:", data.text);
+            if (data.text) {
+                askQuestion(data.text);
+            }
+        });
+
+        // --- Core Logic ---
+        async function askQuestion(question) {
+            console.log(`➡️ [LOG] Sending question to backend: "${question}"`);
+            setFaceState('thinking', `Thinking about: "${question}"`);
+            const response = await fetch('/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question: question })
+            });
+            const data = await response.json();
+            playAudio(data.audio_url, data.text_answer);
+        }
+
+        function playAudio(url, text_answer) {
+            console.log(`▶️ [LOG] Playing audio from URL: ${url}`);
+            setFaceState('talking', "Here's my answer...");
+            const audio = new Audio(url);
+            audio.play();
+            audio.onended = () => {
+                setFaceState('listening', 'Say "jarvis" to ask another question!');
+            };
+        }
+
+        // --- UI & State Management ---
+        function setFaceState(state, text) {
+            console.log(`🎨 [LOG] Setting face state to: ${state}, text: "${text}"`);
+            face.className = 'face'; // Reset classes
+            if (state !== 'idle') {
+                face.classList.add(state);
+            }
+            statusText.textContent = text;
+        }
+
+        // --- MediaRecorder Setup ---
+        async function startAssistant() {
+            console.log("🚀 [LOG] Attempting to start assistant...");
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                console.log("✅ [LOG] Microphone access granted.");
+
+                mediaRecorder = new MediaRecorder(stream);
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        console.log(`📡 [LOG] Sending audio chunk of size: ${event.data.size}`);
+                        
+                        // Convert Blob to ArrayBuffer, then to bytes
+                        event.data.arrayBuffer().then(buffer => {
+                            socket.emit('audio_stream', buffer);
+                        });
+                    }
+                };
+
+                mediaRecorder.onstart = () => {
+                    console.log("🎤 [LOG] MediaRecorder started.");
+                    setFaceState('listening', 'Say "jarvis" to wake me up!');
+                    isListening = true;
+                    startBtn.textContent = 'Stop';
+                    startBtn.classList.add('listening');
+                };
+
+                mediaRecorder.onstop = () => {
+                    console.log("🛑 [LOG] MediaRecorder stopped.");
+                    setFaceState('idle', 'Click "Start" to begin!');
+                    isListening = false;
+                    startBtn.textContent = 'Start';
+                    startBtn.classList.remove('listening');
+                };
+                
+                // Start recording and create a chunk every 250ms
+                mediaRecorder.start(250);
+
+            } catch (err) {
+                console.error('❌ [LOG] Error starting assistant:', err);
+                setFaceState('idle', 'I need permission to use your microphone.');
+            }
+        }
+
+        function stopAssistant() {
+            console.log("🛑 [LOG] Attempting to stop assistant...");
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        }
+
+        // --- Initial Event Listener ---
+        startBtn.addEventListener('click', () => {
+            console.log(`🔘 [LOG] Button clicked. isListening: ${isListening}`);
+            if (isListening) {
+                stopAssistant();
+            } else {
+                startAssistant();
+            }
+        });
+    </script>
+</body>
+</html>
