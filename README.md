@@ -115,7 +115,7 @@ Make sure you have:
 
 ### 1️⃣ Clone the Repository
 ```bash
-git clone https://github.com/<your-username>/ai-teaching-assistant.git
+git clone https://github.com/JustChaos10/ai-teaching-assistant.git
 cd ai-teaching-assistant
 ```
 
