@@ -164,7 +164,7 @@ pip install -r requirements_updated.txt
 
 ## 💻 Frontend Setup (React + React Three Fiber)
 
-1. Open a **new terminal**:
+1. Open a **new terminal (make sure venv310 is activated again in this new terminal)**:
    ```bash
    cd Capstone/humanoid
    ```
