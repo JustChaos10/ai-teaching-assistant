@@ -1,188 +1,285 @@
-# AI Teaching Assistant
+# 🧠 AI Teaching Assistant
 
-An **AI-powered teaching assistant** with interactive games, chatbot prompts, image detection modules, and teacher-student interfaces — all built in Python. The goal is to make learning engaging through gamification and AI-driven interactions.
+An **AI-powered teaching assistant** with interactive games, a 3D voice chatbot, image detection modules, and teacher-student interfaces — all built in Python and JavaScript.  
+The goal is to make learning more engaging through **gamification** and **AI-driven interaction**.
 
 ---
 
 ## ✨ Features
 
 - 🎮 **Gamified Learning**
-  - Finger counting games
-  - Fruits vs. vegetables classification
-  - Healthy vs. junk food activities
-  - Puzzle and sprite-based exercises
+  - Finger counting and gesture games  
+  - Fruits vs. vegetables classifier  
+  - Healthy vs. junk food detection  
+  - Image-based puzzle activities  
 
-- 🤖 **Chatbot & Prompts**
-  - Chatbot logic with custom teaching prompts
-  - Avatar system for more engaging conversations
+- 🤖 **Chatbot & Avatar**
+  - AI chatbot that listens and speaks  
+  - Real-time lip-sync animation using **Rhubarb Lip Sync**  
+  - Natural TTS (Text-to-Speech) responses  
 
 - 👩‍🏫 **Teacher Interface**
-  - Launch and control teacher-facing UI
-  - Manage prompts, sessions, and activities
+  - Manage teaching prompts and sessions  
+  - Launch activities directly from the GUI  
 
-- 🖼 **Image Detection**
-  - Simple computer vision modules for interactive lessons
-  - Image datasets and detectors for practice tasks
+- 🖼️ **Image Detection**
+  - Computer vision–based teaching modules  
+  - Uses OpenCV for educational detection games  
 
-- 🛠 **Modular Architecture**
-  - Backend with multiple Python modules
-  - Extendable design for adding new games or teaching modules
+- 🧩 **Modular Architecture**
+  - Independent modules for Chatbot, Games, and CV tasks  
+  - Extensible for adding new teaching tools  
 
 ---
 
 ## 📂 Project Structure
 
-```bash
+```
 ai-teaching-assistant/
-├── .env.example                        # Example environment variable file
-├── .gitignore                          # Ignored files and directories
-├── .gitattributes                      # Git LFS and line-ending settings
-├── README.md                           # Main project documentation
-├── LICENSE                             # License file
+├── backend/                         # 🧠 FastAPI backend (STT → LLM → TTS → Rhubarb)
+│   ├── app.py                        # FastAPI entry point
+│   ├── teacher_chatbot_app.py        # Chatbot pipeline integration
+│   ├── teacher_chatbot.py            # Core chatbot class
+│   ├── rag_system.py                 # RAG (Retrieval-Augmented Generation)
+│   ├── docs/                         # Teaching PDFs for RAG ingestion
+│   ├── outputs/                      # Generated TTS audio + lip sync JSONs
+│   ├── templates/test.html           # Upload test UI
+│   └── requirements.txt              # Backend dependencies
 │
-├── backend/                            # 🧩 Core backend system (FastAPI + RAG)
-│   ├── app.py                          # FastAPI server with /ask and /audio endpoints
-│   ├── teacher_chatbot.py              # Main TeacherChatbot class (STT → LLM → TTS → Rhubarb)
-│   ├── teacher_chatbot_app.py          # Backend entrypoint (integrates chatbot pipeline)
-│   ├── rag_system.py                   # Retrieval-Augmented Generation system (RAG)
-│   ├── requirements.txt                # Backend dependencies
-│   ├── templates/
-│   │   └── test.html                   # Simple frontend for testing API uploads
-│   ├── docs/                           # Educational content (ingested into RAG)
-│   │   ├── aejm101.pdf … aemr1ps.pdf   # Teaching material PDFs
-│   ├── indexes/faiss_index/            # Vector database (FAISS index)
-│   │   ├── index.faiss
-│   │   └── index.pkl
-│   └── outputs/                        # Generated TTS audio + Rhubarb phoneme JSONs
+├── humanoid/                         # 🧍 React + Three.js avatar frontend
+│   ├── public/
+│   │   ├── animations/               # FBX animations (Idle, Greeting, etc.)
+│   │   ├── models/                   # Avatar GLB model
+│   │   ├── audios/                   # Audio samples
+│   │   └── textures/                 # Background textures
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Avatar.jsx            # Lip-sync & TTS logic
+│   │   │   └── Experience.jsx        # Scene setup (lighting, environment)
+│   │   ├── App.jsx                   # Main React app
+│   │   └── main.jsx                  # Vite entry point
+│   ├── vite.config.js                # Frontend config
+│   └── package.json                  # Frontend dependencies
 │
-├── humanoid/                           # 🧍 Frontend humanoid avatar system (React Three Fiber)
-│   └── r3f-lipsync-tutorial/           # React + Three.js + ReadyPlayerMe + Rhubarb
-│       ├── public/
-│       │   ├── animations/             # FBX animation clips (Idle, Greeting, Speaking, etc.)
-│       │   ├── audios/                 # Example test audios
-│       │   ├── models/                 # Avatar GLB model
-│       │   └── textures/               # Background images
-│       ├── src/
-│       │   ├── components/
-│       │   │   ├── Avatar.jsx          # Avatar component — handles lip sync & expressions
-│       │   │   └── Experience.jsx      # Scene setup (camera, lighting, animations)
-│       │   ├── App.jsx                 # Main React app component
-│       │   └── main.jsx                # Entry point for Vite app
-│       ├── vite.config.js              # Vite configuration
-│       └── package.json                # Frontend dependencies
+├── image detector/                   # 🖼️ CV-based learning modules
+│   ├── detector.py                   # Object detection logic
+│   ├── finger_counting_game.py       # Hand gesture recognition
+│   ├── fruits_vs_vegetables.py       # Food classification
+│   ├── healthyVSjunk.py              # Food health categorization
+│   ├── puzzle.py                     # Image puzzle mini-game
+│   ├── images/, temp_images/         # Game assets
+│   ├── puzzle_sprites/               # Sprite resources
+│   └── requirements.txt              # CV dependencies
 │
-├── image detector/                     # 🖼️ Interactive learning mini-games (CV-based)
-│   ├── detector.py                     # Core object detection logic
-│   ├── finger_counting_game.py         # Hand gesture recognition (counting fingers)
-│   ├── fruits_vs_vegetables.py         # Food classification game
-│   ├── healthyVSjunk.py                # Healthy vs junk food detection
-│   ├── puzzle.py                       # Simple image puzzle game
-│   ├── images/, temp_images/           # Game assets and temp storage
-│   ├── puzzle_sprites/                 # Sprite assets for puzzles
-│   └── requirements.txt                # Requirements for image detector subsystem
-│
-├── animations/                         # 🌀 GIF animations for idle/listening/speaking states
-│   ├── idle.gif
-│   ├── listening.gif
-│   ├── speaking.gif
-│   ├── thinking.gif
-│   └── index.html                      # Test page for displaying animations
-│
-├── asset/                              # ⚙️ (LFS) Model weights (not pushed to GitHub)
+├── asset/                            # ⚙️ (LFS) AI model weights (ignored in Git)
 │   ├── DVAE.safetensors
 │   ├── Decoder.safetensors
 │   ├── Embed.safetensors
 │   ├── Vocos.safetensors
 │   └── gpt/model.safetensors
 │
-├── requirements.txt                    # Master dependency list (for deployment)
-├── requirements_updated.txt            # Expanded dependencies (merged envs)
+├── animations/                       # 🌀 GIF animations (idle/speaking/thinking)
+│   ├── idle.gif
+│   ├── speaking.gif
+│   └── listening.gif
 │
-├── launch_teacher_interface.py         # Main launcher for full AI assistant
-├── teacher_interface.py                # GUI interface for chatbot
-├── module_executor.py                  # Runtime module manager (voice, CV, chatbot)
-├── chatbot_logic.py                    # Chat reasoning and dialogue logic
-├── setup_api_keys.py                   # Utility for setting environment variables
-├── quick_test.py                       # Script for testing API flow (STT → LLM → TTS)
+├── requirements.txt                  # Master dependency list
+├── requirements_updated.txt          # Full merged dependency list
 │
-├── FIXED_SPEECH_ISSUES.md              # Documentation of fixed issues in TTS/STT
-├── ISSUES_FIXED_SUMMARY.md             # Summary of fixes and known issues
-├── README_TEACHER_SYSTEM.md            # Backend system documentation
-├── SPEECH_RECOGNITION_GUIDE.md         # Guide for speech pipeline setup
-├── TEST_RESULTS.md                     # Logs and evaluation results
-└── runnotes.txt                        # Developer notes and run instructions
-
+├── launch_teacher_interface.py       # Launch complete teaching interface
+├── teacher_interface.py              # Teacher GUI
+├── module_executor.py                # Module manager (games/chatbot/CV)
+├── chatbot_logic.py                  # Dialogue management
+├── setup_api_keys.py                 # Environment variable setup
+├── quick_test.py                     # Quick STT → LLM → TTS test
+│
+└── LICENSE                           # MIT license
 ```
 
 ---
+## ⚙️ Prerequisites
+
+Make sure you have:
+
+- [Python 3.10+](https://www.python.org/downloads/)
+- [Node.js 18+](https://nodejs.org/en/download/)
+- [Git](https://git-scm.com/downloads/)
+- [Rhubarb Lip Sync](https://github.com/DanielSWolf/rhubarb-lip-sync/releases)
+
+> 💡 On Windows, install Rhubarb to:
+> ```
+> C:\tools\rhubarb\rhubarb.exe
+> ```
 
 ## 🚀 Getting Started
 
-### 1. Clone the repository
+### 1️⃣ Clone the Repository
 ```bash
 git clone https://github.com/<your-username>/ai-teaching-assistant.git
 cd ai-teaching-assistant
 ```
 
-### 2. Create a virtual environment
-```bash
-python -m venv venv
-source venv/bin/activate   # On Linux/Mac
-venv\Scripts\activate    # On Windows
-```
+---
 
-### 3. Install dependencies
+### 2️⃣ Create a Virtual Environment
 ```bash
-pip install -r requirements.txt
-```
-
-### 4. Run the teacher interface
-```bash
-python launch_teacher_interface.py
+python3.10 -m venv venv310
+# On Linux/Mac
+source venv310/bin/activate
+# On Windows
+venv310\Scripts\activate
 ```
 
 ---
 
-## ⚙️ Requirements
+### 3️⃣ Install Dependencies
+```bash
+pip install -r requirements_updated.txt
+```
 
-- Python 3.9+
-- Libraries listed in `requirements.txt` (e.g., OpenAI, Gradio, Torch, etc. depending on your modules)
-- (Optional) Webcam for image-based activities
+---
+
+## 🧩 Backend Setup (FastAPI)
+
+1. Navigate to the backend folder:
+   ```bash
+   cd Capstone/backend
+   ```
+
+2. Run the FastAPI server:
+   ```bash
+   uvicorn app:app --reload --port 8000
+   ```
+
+3. Wait for:
+   ```bash
+   Application startup complete
+   ```
+   ✅ Now your backend runs on:
+   ```bash
+   http://127.0.0.1:8000
+   ```
+
+---
+
+## 💻 Frontend Setup (React + React Three Fiber)
+
+1. Open a **new terminal**:
+   ```bash
+   cd Capstone/humanoid
+   ```
+
+2. Install Node.js:
+   - Download from [Node.js LTS](https://nodejs.org/en/download/)
+   - Check “Add to PATH” during setup.
+
+3. Verify installation:
+   ```bash
+   node -v
+   npm -v
+   ```
+
+4. Install frontend dependencies:
+   ```bash
+   npm install
+   ```
+
+5. Run the frontend:
+   ```bash
+   npm run dev
+   ```
+
+6. Open your browser at:
+   ```bash
+   http://localhost:5173/
+   ```
+
+---
+
+
 
 ---
 
 ## 🔐 Environment Variables
 
-Create a `.env` file in the project root with the following (example):
-
+Create a `.env` file in the project root:
 ```bash
-OPENAI_API_KEY=your_api_key_here
+OPENAI_API_KEY=your_openai_api_key
+MURF_API_KEY=your_murf_api_key
 ```
 
 ---
 
-## 🛡️ License
+## 🧠 How It Works
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙌 Contributions
-
-Contributions, issues, and feature requests are welcome!  
-Feel free to fork this repo and open a pull request.
-
----
-
-## 📌 Notes
-
-- This project is modular — add new games by creating a Python module and linking it in `game_manager.py`.
+```
+🎙️ Voice Input
+   ↓
+🧠 FastAPI backend (Whisper → LLM → TTS)
+   ↓
+🎧 Audio + Rhubarb JSON
+   ↓
+🧍 React Avatar (mouth animation syncs with phonemes)
+```
 
 ---
 
-## 🎯 Roadmap
+## 🧰 Commands
 
-- Add more AI-driven activities
-- Improve computer vision modules
-- Expand teacher dashboard with analytics
-- Support for multilingual prompts
+| Task | Command |
+|------|----------|
+| Run backend | `uvicorn app:app --reload` |
+| Run frontend | `npm run dev` |
+| Install backend deps | `pip install -r requirements.txt` |
+| Install frontend deps | `npm install` |
+| Build frontend | `npm run build` |
+| Clean npm cache | `npm cache clean --force` |
+
+---
+
+## 🧩 Tech Stack
+
+| Component | Technology |
+|------------|-------------|
+| Voice Recognition | OpenAI Whisper |
+| Text-to-Speech | Murf.ai |
+| Lip Sync | Rhubarb Lip Sync |
+| 3D Rendering | React Three Fiber |
+| Backend | FastAPI |
+| Frontend | React + Vite |
+| Avatar Model | Ready Player Me |
+| Animations | Mixamo FBX |
+
+---
+
+## 📦 Deployment Notes
+
+- Do **not** commit large `.safetensors` model files to GitHub.
+- Add to `.gitignore`:
+  ```
+  venv310/
+  __pycache__/
+  outputs/
+  node_modules/
+  asset/
+  *.safetensors
+  ```
+
+You can host:
+- **Backend:** Render / Railway / AWS EC2  
+- **Frontend:** Vercel / Netlify
+
+---
+
+
+
+---
+
+## 📜 License
+
+This project is licensed under the **MIT License**.  
+See [LICENSE](LICENSE) for details.
+
+---
+
+> 🟢 *“Making education more interactive, one avatar at a time.”*
