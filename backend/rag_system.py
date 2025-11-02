@@ -135,7 +135,7 @@ class RAGSystem:
             
         try:
             self.llm = ChatGroq(
-                model="gemma2-9b-it",
+                model="llama-3.1-8b-instant",
                 api_key=groq_api_key,
                 temperature=0.3
             )

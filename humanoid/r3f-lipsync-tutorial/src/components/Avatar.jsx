@@ -1,5 +1,8 @@
 /*
-Fully working Avatar with voice recording -> FastAPI /ask -> lip-sync playback
+Avatar with:
+- 🎙 Floating mic button (bottom center) → POST /ask → lip-sync playback
+- 🧠 Supports external audioUrl + phonemes (lecture summary playback)
+- 🧍 Stays on Idle while speaking (no greeting/wave loop)
 */
 
 import { useAnimations, useFBX, useGLTF, Html } from "@react-three/drei";
@@ -20,21 +23,20 @@ const visemeMap = {
 };
 
 export function Avatar(props) {
-  // Load model and animations
+  const { audioUrl: externalAudioUrl, phonemes: externalPhonemes } = props;
+
+  // --- Model + Animations ---
   const gltf = useGLTF("/models/646d9dcdc8a5f5bddbfac913.glb");
   const { nodes, materials } = gltf;
-  const idle = useFBX("/animations/Idle.fbx");
-  const greet = useFBX("/animations/Standing Greeting.fbx");
 
+  // keep only Idle to avoid waving
+  const idle = useFBX("/animations/Idle.fbx");
   idle.animations[0].name = "Idle";
-  greet.animations[0].name = "Greeting";
 
   const group = useRef();
-  const { actions } = useAnimations(
-    [idle.animations[0], greet.animations[0]],
-    group
-  );
+  const { actions } = useAnimations([idle.animations[0]], group);
 
+  // --- State ---
   const [animation, setAnimation] = useState("Idle");
   const [recording, setRecording] = useState(false);
   const [audio, setAudio] = useState(null);
@@ -43,27 +45,39 @@ export function Avatar(props) {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
-  // Animation control
+  // --- If parent pushes external audio (lecture mode) ---
+  useEffect(() => {
+    if (externalAudioUrl && externalPhonemes) {
+      const extAudio = new Audio(externalAudioUrl);
+      extAudio.crossOrigin = "anonymous";
+      setPhonemes(externalPhonemes);
+      setAudio(extAudio);
+      setAnimation("Idle");        // ✅ keep idle while speaking
+      extAudio.play();
+      extAudio.onended = () => setAnimation("Idle");
+    }
+  }, [externalAudioUrl, externalPhonemes]);
+
+  // --- Animation control ---
   useEffect(() => {
     if (!actions || !actions[animation]) return;
-    actions[animation].reset().fadeIn(0.5).play();
-    return () => actions[animation]?.fadeOut(0.5);
+    actions[animation].reset().fadeIn(0.4).play();
+    return () => actions[animation]?.fadeOut(0.3);
   }, [animation, actions]);
 
-  // Head follow camera
+  // --- Subtle head follow ---
   useFrame((state) => {
     const head = group.current?.getObjectByName("Head");
     if (head) head.lookAt(state.camera.position);
   });
 
-  // Mouth animation
+  // --- Lip-sync visemes ---
   useFrame(() => {
     if (!phonemes || !audio || audio.paused) return;
-
-    const currentTime = audio.currentTime;
+    const t = audio.currentTime;
     if (!nodes?.Wolf3D_Head || !nodes?.Wolf3D_Teeth) return;
 
-    // Reset visemes
+    // reset
     Object.values(visemeMap).forEach((v) => {
       const hi = nodes.Wolf3D_Head.morphTargetDictionary[v];
       const ti = nodes.Wolf3D_Teeth.morphTargetDictionary[v];
@@ -71,30 +85,24 @@ export function Avatar(props) {
       if (ti !== undefined) nodes.Wolf3D_Teeth.morphTargetInfluences[ti] = 0;
     });
 
-    // Apply current cue
-    const cue = phonemes.mouthCues.find(
-      (m) => currentTime >= m.start && currentTime <= m.end
-    );
+    // current cue
+    const cue = phonemes.mouthCues.find((m) => t >= m.start && t <= m.end);
     if (cue) {
       const morph = visemeMap[cue.value];
       const hi = nodes.Wolf3D_Head.morphTargetDictionary[morph];
       const ti = nodes.Wolf3D_Teeth.morphTargetDictionary[morph];
       if (hi !== undefined)
         nodes.Wolf3D_Head.morphTargetInfluences[hi] = THREE.MathUtils.lerp(
-          nodes.Wolf3D_Head.morphTargetInfluences[hi],
-          1,
-          0.5
+          nodes.Wolf3D_Head.morphTargetInfluences[hi], 1, 0.55
         );
       if (ti !== undefined)
         nodes.Wolf3D_Teeth.morphTargetInfluences[ti] = THREE.MathUtils.lerp(
-          nodes.Wolf3D_Teeth.morphTargetInfluences[ti],
-          1,
-          0.5
+          nodes.Wolf3D_Teeth.morphTargetInfluences[ti], 1, 0.55
         );
     }
   });
 
-  // --- 🎙️ Mic recording + backend upload ---
+  // --- 🎙 Mic → backend /ask ---
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -125,6 +133,7 @@ export function Avatar(props) {
             audioEl.crossOrigin = "anonymous";
             setAudio(audioEl);
             setPhonemes(data.phonemes);
+            setAnimation("Idle");  // ✅ keep idle while speaking
             audioEl.play();
             audioEl.onended = () => setAnimation("Idle");
           } else {
@@ -137,7 +146,6 @@ export function Avatar(props) {
 
       recorder.start();
       setRecording(true);
-      console.log("🎙️ Recording started...");
     } catch (err) {
       console.error("Microphone error:", err);
     }
@@ -147,11 +155,9 @@ export function Avatar(props) {
     if (mediaRecorderRef.current && recording) {
       mediaRecorderRef.current.stop();
       setRecording(false);
-      console.log("🛑 Recording stopped.");
     }
   };
 
-  // Render model + UI
   return (
     <>
       <group {...props} ref={group} dispose={null}>
@@ -205,20 +211,24 @@ export function Avatar(props) {
         />
       </group>
 
-      {/* Record button */}
-      <Html position={[0, 2, 0]}>
-        <div style={{ textAlign: "center" }}>
+      {/* Floating mic button (always available) */}
+      <Html fullscreen>
+        <div style={{
+          position: "fixed",
+          left: 0, right: 0, bottom: 24,
+          display: "flex", justifyContent: "center", pointerEvents: "none"
+        }}>
           <button
             onClick={recording ? stopRecording : startRecording}
             style={{
-              backgroundColor: recording ? "#ff4b4b" : "#4CAF50",
+              pointerEvents: "auto",
+              backgroundColor: recording ? "#ff4b4b" : "#2ecc71",
               color: "white",
-              fontSize: "18px",
+              fontSize: 16,
               border: "none",
-              borderRadius: "10px",
-              padding: "12px 25px",
-              cursor: "pointer",
-              boxShadow: "0px 0px 10px rgba(0,0,0,0.3)",
+              borderRadius: 12,
+              padding: "12px 22px",
+              boxShadow: "0px 8px 24px rgba(0,0,0,0.25)"
             }}
           >
             {recording ? "Stop Recording" : "Start Recording"}
