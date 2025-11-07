@@ -7,13 +7,10 @@ from pathlib import Path
 import uuid
 import shutil
 import os
+from config import MURF_API_KEY, LECTURE_API_BASE, OUTPUT_DIR
 
 # ---------------- CONFIG ----------------
-OUTPUT_DIR = Path("outputs")
 OUTPUT_DIR.mkdir(exist_ok=True)
-
-# External Lecture API (your Node/Express app)
-LECTURE_API_BASE = "http://localhost:5000/api"
 
 # Initialize FastAPI
 app = FastAPI(title="AI Teaching Assistant Backend")
@@ -28,7 +25,7 @@ app.add_middleware(
 
 # ---------------- CHATBOT INIT ----------------
 chatbot = TeacherChatbot(
-    murf_api_key="ap2_5f202fde-8bb8-41c2-a021-81c8757d64b9"
+    murf_api_key=MURF_API_KEY
 )
 
 # ---------------- ROOT ----------------

@@ -8,14 +8,10 @@ from faster_whisper import WhisperModel
 from pathlib import Path
 from rag_system import RAGSystem
 from teacher_chatbot import auto_ingest_docs, clean_text
+from config import RHUBARB_PATH, OUTPUT_DIR
 
 
-OUTPUT_DIR = Path("outputs")
-OUTPUT_DIR.mkdir(exist_ok=True)
 pygame.mixer.init()
-
-# Path to rhubarb executable
-RHUBARB_PATH = Path(r"C:\tools\rhubarb\rhubarb.exe")
 
 
 class TeacherChatbot:
@@ -58,6 +54,12 @@ class TeacherChatbot:
 
     # ---------------- Rhubarb Lip Sync ----------------
     def generate_lipsync(self, audio_file):
+        if not RHUBARB_PATH.exists():
+            raise FileNotFoundError(
+                f"Rhubarb executable not found at {RHUBARB_PATH}. "
+                "Please download Rhubarb from https://github.com/DanielSWolf/rhubarb-lip-sync/releases "
+                "and place it at the specified path, or update RHUBARB_PATH in config.py."
+            )
         json_file = OUTPUT_DIR / f"{uuid.uuid4()}.json"
         cmd = [
             str(RHUBARB_PATH),   # Path to rhubarb.exe

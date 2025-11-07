@@ -8,22 +8,24 @@ The backend is a sophisticated system composed of several key components, primar
 
 ### 1. Core AI and Logic (Python)
 
+*   **Configuration (`config.py`):** This new file centralizes all key configuration variables, making them easily modifiable without altering core application logic. It defines:
+    *   `RHUBARB_PATH`: The path to the Rhubarb lip-sync executable.
+    *   `MURF_API_KEY`: The API key for the Murf AI text-to-speech service (preferably loaded from environment variables).
+    *   `LECTURE_API_BASE`: The base URL for the external Node.js lecture API.
+    *   `OUTPUT_DIR`: The directory where generated audio and phoneme files are stored.
+
 *   **Web Server (`app.py`):** The main entry point is a `FastAPI` web server. It exposes several API endpoints that the frontend application communicates with. Its primary roles are:
     *   Handling audio uploads from the user for questions.
     *   Serving the generated audio responses.
     *   Proxying lecture and quiz-related requests to a separate Node.js service.
+    *   It now imports `MURF_API_KEY`, `LECTURE_API_BASE`, and `OUTPUT_DIR` from `config.py`.
 
 *   **Chatbot Orchestrator (`teacher_chatbot_app.py`):** The `TeacherChatbot` class is the heart of the AI. It orchestrates the entire process when a user asks a question:
     1.  **Speech-to-Text:** It uses a `Whisper` model to transcribe the user's spoken question from an audio file into text.
     2.  **Question Answering:** It sends the transcribed question to the RAG system to get an answer.
     3.  **Text-to-Speech:** It uses the `murf.ai` service to convert the text answer into high-quality speech.
     4.  **Lip Sync Generation:** It uses a tool called `Rhubarb` to generate phoneme data from the audio, which is used to animate an avatar's lips to match the spoken words.
-
-*   **Retrieval-Augmented Generation (`rag_system.py`):** The `RAGSystem` class is the "brain" that finds and generates answers.
-    *   **Document Ingestion:** It can read and extract text from various document formats like PDF, DOCX, and PPTX located in the `/docs` folder.
-    *   **Vectorization:** It uses `Sentence-Transformers` to convert the text from these documents into numerical representations (embeddings) and stores them in a `FAISS` vector index. This allows for very fast and efficient searching.
-    *   **Information Retrieval:** When a question is asked, it searches the FAISS index to find the most relevant pieces of information from the ingested documents.
-    *   **Answer Generation:** It then uses a powerful Large Language Model (`llama-3.1-8b-instant` via the `Groq` API) to generate a natural, educational, and age-appropriate answer. The retrieved documents are provided to the model as context, ensuring the answers are based on the course material. It's specifically prompted to act as a patient and encouraging teacher for young students.
+    *   It now imports `RHUBARB_PATH` and `OUTPUT_DIR` from `config.py`.
 
 *   **Command-Line Interface (`teacher_chatbot.py`):** This file provides a way for a developer to interact with and test the RAG system directly from the command line, including a voice chat mode.
 

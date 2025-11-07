@@ -89,3 +89,8 @@ asset/gpt/
 asset/*.safetensors
 backup_models/
 
+# BudgetBridge 2 specific ignores
+BudgetBridge 2/node_modules/
+BudgetBridge 2/dist/
+BudgetBridge 2/.local/
+
