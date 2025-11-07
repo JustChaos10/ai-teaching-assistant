@@ -1,4 +1,16 @@
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+import dotenv from "dotenv";
+import path from "path";
+
+// Load .env from the project root
+dotenv.config({ path: path.resolve(__dirname, "../../../../.env") });
+
+const apiKey = process.env.GROQ_API_KEY;
+
+if (!apiKey) {
+  throw new Error("GROQ_API_KEY environment variable is not set");
+}
+
 
 export async function summarizeForGrade1(text: string): Promise<string> {
   try {
@@ -23,7 +35,7 @@ export async function summarizeForGrade1(text: string): Promise<string> {
     console.log("AI_Prompt:\n" + trunc(prompt));
     console.log("Content:\n" + trunc(text));
 
-    const apiKey = process.env.GROQ_API_KEY || "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";
+    const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
       console.warn("GROQ_API_KEY not set. Falling back to manual simplifier.");
       const fallback = text.slice(0, 600);
