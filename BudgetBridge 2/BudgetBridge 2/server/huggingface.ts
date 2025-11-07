@@ -104,7 +104,7 @@ export async function generateQuizQuestions(
   count: number = 5
 ): Promise<GeneratedQuestion[]> {
   const model = process.env.GROQ_MODEL || "llama-3.1-8b-instant";
-  const apiKey = process.env.GROQ_API_KEY || "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";
+  const apiKey = process.env.GROQ_API_KEY;
 
   const instruction = [
     "Create multiple-choice questions based on the following lesson.",
