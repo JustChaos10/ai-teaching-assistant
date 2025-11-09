@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Teaching Assistant - Live2D Mode</title>
+    
+    <!-- Live2D Core (non-module script for global access; minified for performance) -->
+    <script src="/live2d-demo/Core/live2dcubismcore.min.js"></script>
+  </head>
+  <body>
+    <!-- Live2D Canvas (demo renders Haru here; full-screen background with light gray fallback) -->
+    <canvas id="canvas" width="800" height="600" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; background: #f0f0f0;"></canvas>
+    
+    <!-- React Root (mounts App.jsx for sidebar, lectures, etc.; overlays Live2D) -->
+    <div id="root"></div>
+    
+    <!-- Demo Bundle (module: Framework + LAppDelegate logic; loads Haru from relative Resources) -->
+    <script type="module" src="/live2d-demo/assets/index-DAhHvHok.js"></script>
+    
+    <!-- Vite React Entry (loads after Live2D init to avoid conflicts) -->
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
