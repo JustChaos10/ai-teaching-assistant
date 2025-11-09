@@ -7,6 +7,7 @@ from pathlib import Path
 import uuid
 import shutil
 import os
+import subprocess
 from config import MURF_API_KEY, LECTURE_API_BASE, OUTPUT_DIR
 
 # ---------------- CONFIG ----------------
@@ -145,4 +146,33 @@ async def speak(request: Request):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"TTS error: {e}")
+
+# ------------------- GAMES LAUNCHER -------------------
+@app.post("/launch-games")
+async def launch_games():
+    """
+    Launches the Games/main.py script which opens the game launcher GUI.
+    """
+    try:
+        # Get the path to the Games directory
+        games_dir = Path(__file__).parent.parent / "Games"
+        main_py = games_dir / "main.py"
+
+        if not main_py.exists():
+            raise HTTPException(status_code=404, detail=f"Games launcher not found at {main_py}")
+
+        # Launch the game launcher in a new process
+        subprocess.Popen(
+            ["python", str(main_py)],
+            cwd=str(games_dir),
+            start_new_session=True
+        )
+
+        return JSONResponse({
+            "status": "success",
+            "message": "Games launcher started successfully"
+        })
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error launching games: {e}")
 
