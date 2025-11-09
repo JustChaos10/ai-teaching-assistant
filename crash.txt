@@ -1,0 +1,309 @@
+================================================================================
+                     AI TEACHING ASSISTANT - ERROR LOG
+================================================================================
+
+📝 PURPOSE: Log all errors, crashes, and issues encountered during setup
+         and runtime. Claude will analyze this file to provide solutions.
+
+📅 Created: 2025-11-09
+🔄 Last Updated: [Update this date when adding new errors]
+
+================================================================================
+HOW TO USE THIS FILE
+================================================================================
+
+When you encounter an error:
+
+1. Copy the TEMPLATE below
+2. Fill in ALL sections with details
+3. Paste at the BOTTOM of this file (after existing errors)
+4. Save the file
+5. Ask Claude to review this file and provide solutions
+
+⚠️  The more detail you provide, the better Claude can help!
+
+================================================================================
+ERROR REPORT TEMPLATE (Copy this for each new error)
+================================================================================
+
+--- ERROR #[NUMBER] -----------------------------------------------------------
+Date/Time: [YYYY-MM-DD HH:MM]
+Component: [Backend / Frontend / Games / BudgetBridge / Setup]
+Severity: [Critical / High / Medium / Low]
+Status: [UNRESOLVED / IN PROGRESS / RESOLVED]
+
+Description:
+[Brief description of what you were trying to do when the error occurred]
+
+Steps to Reproduce:
+1. [First step]
+2. [Second step]
+3. [Error occurs]
+
+Error Message:
+```
+[Paste the FULL error message here, including stack traces]
+```
+
+Browser Console (if frontend issue):
+```
+[Paste browser console errors - Press F12 to open DevTools]
+```
+
+Terminal Output (if backend/setup issue):
+```
+[Paste terminal output]
+```
+
+Environment:
+- OS: [Windows / Mac / Linux]
+- Node.js Version: [Run: node --version]
+- npm Version: [Run: npm --version]
+- Python Version: [Run: python --version]
+- Browser: [Chrome / Firefox / Safari / Edge]
+
+What You've Tried:
+- [List any solutions you've attempted]
+
+Screenshots/Logs:
+[Describe or paste relevant screenshots or log files]
+
+Additional Context:
+[Any other relevant information]
+
+-------------------------------------------------------------------------------
+
+
+================================================================================
+LOGGED ERRORS (Add new errors below)
+================================================================================
+
+
+[No errors logged yet - paste your first error below using the template above]
+
+
+
+
+================================================================================
+COMMON ERROR CATEGORIES
+================================================================================
+
+Use these keywords to help Claude identify your issue faster:
+
+BACKEND ERRORS:
+- "ModuleNotFoundError"
+- "ImportError"
+- "Port already in use"
+- "CORS error"
+- "Connection refused"
+- "Rhubarb not found"
+- "TTS error"
+- "API key invalid"
+
+FRONTEND ERRORS:
+- "npm install failed"
+- "EACCES permission denied"
+- "Module not found"
+- "Live2D model not loading"
+- "Vite build failed"
+- "Cannot find module"
+- "CORS policy"
+- "Network error"
+
+LIVE2D SPECIFIC:
+- "Failed to load Live2D model"
+- "Model file not found"
+- "Texture missing"
+- "PIXI error"
+- "Canvas rendering error"
+
+AUDIO/MIC ERRORS:
+- "Microphone permission denied"
+- "getUserMedia"
+- "Audio playback failed"
+- "MediaRecorder"
+
+GAMES MODULE:
+- "Tkinter error"
+- "OpenCV error"
+- "cv2 module not found"
+- "Game window won't open"
+
+================================================================================
+RESOLVED ERRORS (Move resolved errors here for reference)
+================================================================================
+
+
+[No resolved errors yet]
+
+
+
+
+================================================================================
+ERROR ANALYSIS CHECKLIST
+================================================================================
+
+Before logging an error, verify:
+
+☐ You followed FRONTEND_SETUP_GUIDE.txt exactly
+☐ You have the latest code from git pull
+☐ Backend server is running (http://127.0.0.1:8000)
+☐ All dependencies installed (npm install, pip install -r requirements.txt)
+☐ Live2D model files downloaded and placed correctly
+☐ Environment variables set (.env file exists)
+☐ Correct Python virtual environment activated
+☐ No firewall blocking ports 8000, 5173, 5000
+☐ Browser cache cleared (Ctrl+Shift+Delete)
+☐ Node modules reinstalled (rm -rf node_modules && npm install)
+
+================================================================================
+QUICK DIAGNOSTIC COMMANDS
+================================================================================
+
+Run these commands and paste output in your error report:
+
+# Check if backend is running
+curl http://127.0.0.1:8000
+
+# Check frontend dependencies
+cd humanoid/r3f-lipsync-tutorial
+npm list --depth=0
+
+# Check Python packages
+pip list | grep -E "fastapi|uvicorn|murf"
+
+# Check Live2D model files
+ls -la humanoid/r3f-lipsync-tutorial/public/live2d-models/shizuku/
+
+# Check ports in use
+lsof -i :8000
+lsof -i :5173
+lsof -i :5000
+
+# Check node and npm versions
+node --version
+npm --version
+python --version
+
+# Check browser console (paste from F12 DevTools)
+# Check Network tab for failed requests
+
+================================================================================
+GETTING HELP FROM CLAUDE
+================================================================================
+
+After logging your error:
+
+1. Mention the error number: "Claude, please check ERROR #1 in crash.txt"
+2. Claude will:
+   - Read the error details
+   - Analyze the root cause
+   - Provide step-by-step solutions
+   - Update this file with resolution notes
+
+3. After fixing, update the error status to RESOLVED
+
+Example:
+User: "Claude, I'm getting ERROR #1 in crash.txt. Can you help?"
+Claude: [Reads crash.txt, analyzes, provides solution]
+User: "It worked! Thanks!"
+Claude: [Updates error status to RESOLVED with solution notes]
+
+================================================================================
+TIPS FOR EFFECTIVE ERROR REPORTING
+================================================================================
+
+✅ DO:
+- Include FULL error messages (don't truncate)
+- Paste complete terminal output
+- Include line numbers from stack traces
+- Mention what you were doing when error occurred
+- List what you've already tried
+- Update status when resolved
+
+❌ DON'T:
+- Say "it doesn't work" without details
+- Skip the template fields
+- Forget to include versions
+- Delete old errors (move to RESOLVED section instead)
+- Edit existing error reports (add updates below original)
+
+================================================================================
+ERROR SEVERITY GUIDE
+================================================================================
+
+CRITICAL:
+- Application won't start at all
+- Complete feature failure
+- Data loss risk
+- Security vulnerability
+
+HIGH:
+- Major feature broken
+- Frequent crashes
+- Performance severely degraded
+
+MEDIUM:
+- Feature partially working
+- Workaround exists
+- Affects some users
+
+LOW:
+- Minor cosmetic issue
+- Rare occurrence
+- Easy workaround
+
+================================================================================
+VERSION INFORMATION
+================================================================================
+
+Record your versions here for reference:
+
+System:
+- OS: [Your OS and version]
+- CPU: [Your CPU type]
+- RAM: [Total RAM]
+
+Software:
+- Node.js: [Run: node --version]
+- npm: [Run: npm --version]
+- Python: [Run: python --version]
+- pip: [Run: pip --version]
+
+Git:
+- Current Branch: [Run: git branch --show-current]
+- Last Commit: [Run: git log -1 --oneline]
+
+Dependencies:
+- React: [From package.json]
+- PIXI.js: [From package.json]
+- FastAPI: [From requirements.txt]
+- uvicorn: [From requirements.txt]
+
+================================================================================
+AUTOMATED ERROR DETECTION
+================================================================================
+
+Claude can automatically detect common issues. When asked to review this file,
+Claude will look for:
+
+1. Missing dependencies
+2. Version conflicts
+3. Configuration errors
+4. File permission issues
+5. Network/CORS problems
+6. Model loading failures
+7. API endpoint errors
+
+Provide Claude with:
+- Full error messages
+- Stack traces
+- Console logs
+- Network tab screenshots
+
+================================================================================
+END OF CRASH LOG TEMPLATE
+================================================================================
+
+👇 START LOGGING YOUR ERRORS BELOW THIS LINE 👇
+

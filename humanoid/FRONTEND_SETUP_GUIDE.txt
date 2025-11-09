@@ -1,0 +1,573 @@
+================================================================================
+   AI TEACHING ASSISTANT - FRONTEND SETUP GUIDE (Live2D Integration)
+================================================================================
+
+This guide provides EXACT step-by-step instructions to set up the frontend
+with the new Live2D Cubism integration.
+
+Last Updated: 2025-11-09
+Branch: claude/live2d-integration-w-011CUxEmk5WFm53BtcXyGJbZ
+
+================================================================================
+TABLE OF CONTENTS
+================================================================================
+
+1. Prerequisites
+2. Live2D Model Download & Setup
+3. NPM Package Installation
+4. Configuration
+5. Running the Development Server
+6. Testing the Application
+7. Troubleshooting Common Issues
+8. Production Build
+
+================================================================================
+1. PREREQUISITES
+================================================================================
+
+Before starting, ensure you have:
+
+☐ Node.js 18+ installed
+   Check: node --version
+   Expected: v18.x.x or higher
+   Download: https://nodejs.org/
+
+☐ npm 9+ installed
+   Check: npm --version
+   Expected: 9.x.x or higher
+
+☐ Backend server running
+   Location: http://127.0.0.1:8000
+   Test: curl http://127.0.0.1:8000
+   Should return: {"status":"AI Teaching Assistant API is running"}
+
+☐ Internet connection (for initial npm install)
+
+================================================================================
+2. LIVE2D MODEL DOWNLOAD & SETUP
+================================================================================
+
+The Live2D Shizuka model is NOT included in the repository due to licensing.
+You must download it separately.
+
+OPTION A: Download from Live2D Official (RECOMMENDED)
+------------------------------------------------------
+
+Step 1: Visit Live2D Sample Data Page
+   URL: https://www.live2d.com/en/download/sample-data/
+
+Step 2: Find "Shizuku" Sample Model
+   - Look for "Shizuku (しずく)" in the list
+   - Click the download button
+   - File: Usually named "Shizuku.zip" or similar
+
+Step 3: Extract the ZIP file
+   - Extract to a temporary location
+   - You should see folders like:
+     • shizuku.model.json
+     • textures/
+     • motions/
+     • physics/
+
+Step 4: Copy Model Files to Project
+   Copy ALL extracted files to:
+
+   /home/user/ai-teaching-assistant/humanoid/r3f-lipsync-tutorial/public/live2d-models/shizuku/
+
+   Expected structure:
+   public/
+   └── live2d-models/
+       └── shizuku/
+           ├── shizuku.model.json       (REQUIRED)
+           ├── shizuku.moc              (REQUIRED)
+           ├── textures/
+           │   ├── texture_00.png       (REQUIRED)
+           │   └── (other .png files)
+           ├── motions/                 (Optional)
+           └── expressions/             (Optional)
+
+
+OPTION B: Use Free Resources
+-----------------------------
+
+Alternative sources for Live2D models:
+1. GitHub: Search for "live2d sample models"
+2. Open-LLM-VTuber: https://github.com/Open-LLM-VTuber/Open-LLM-VTuber
+   (Check their live2d-models folder)
+
+⚠️  IMPORTANT: Ensure compliance with Live2D Free Material License Agreement
+   https://www.live2d.com/en/terms/live2d-free-material-license-agreement/
+
+
+VERIFICATION:
+-------------
+
+After setup, verify these files exist:
+
+cd /home/user/ai-teaching-assistant/humanoid/r3f-lipsync-tutorial
+ls -la public/live2d-models/shizuku/
+
+You should see:
+-rw-r--r-- shizuku.model.json
+-rw-r--r-- shizuku.moc
+drwxr-xr-x textures/
+
+If files are missing, the avatar will NOT load!
+
+================================================================================
+3. NPM PACKAGE INSTALLATION
+================================================================================
+
+Step 1: Navigate to Frontend Directory
+---------------------------------------
+
+cd /home/user/ai-teaching-assistant/humanoid/r3f-lipsync-tutorial
+
+Verify you're in the correct directory:
+pwd
+# Should output: /home/user/ai-teaching-assistant/humanoid/r3f-lipsync-tutorial
+
+
+Step 2: Check package.json Exists
+----------------------------------
+
+ls -la package.json
+
+Expected output:
+-rw-r--r-- 1 user user 556 Nov  9 15:04 package.json
+
+If missing, you're in the wrong directory or need to pull latest code!
+
+
+Step 3: Install NPM Dependencies
+---------------------------------
+
+npm install
+
+This will install:
+  ✓ react (18.2.0)           - UI framework
+  ✓ react-dom (18.2.0)       - React DOM renderer
+  ✓ pixi.js (7.3.2)          - 2D rendering engine
+  ✓ @pixi/live2d-display     - Live2D Cubism integration
+  ✓ vite (5.0.8)             - Build tool & dev server
+  ✓ @vitejs/plugin-react     - React plugin for Vite
+
+Expected output:
+added 150+ packages in ~30-60 seconds
+
+⚠️  If you see errors, check:
+   - Internet connection
+   - npm version (should be 9+)
+   - Disk space (need ~200MB free)
+
+
+Step 4: Verify Installation
+----------------------------
+
+Check that node_modules was created:
+ls -la node_modules/
+
+You should see folders for:
+- react
+- react-dom
+- pixi.js
+- @pixi
+- vite
+
+
+Step 5: Check Installed Packages
+---------------------------------
+
+npm list --depth=0
+
+Expected output:
+ai-teaching-assistant-frontend@1.0.0
+├── @pixi/live2d-display@0.5.0
+├── pixi.js@7.3.2
+├── react-dom@18.2.0
+├── react@18.2.0
+└── vite@5.0.8
+
+================================================================================
+4. CONFIGURATION
+================================================================================
+
+Step 1: Verify API Base URL
+----------------------------
+
+Check that config.js points to the backend:
+
+cat src/config.js
+
+Expected content:
+export const API_BASE = "http://127.0.0.1:8000";
+
+If different, update it:
+echo 'export const API_BASE = "http://127.0.0.1:8000";' > src/config.js
+
+
+Step 2: Verify Vite Configuration
+----------------------------------
+
+cat vite.config.js
+
+Expected content:
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+})
+
+
+Step 3: Check index.html
+-------------------------
+
+cat index.html
+
+Should include:
+<div id="root"></div>
+<script type="module" src="/src/main.jsx"></script>
+
+================================================================================
+5. RUNNING THE DEVELOPMENT SERVER
+================================================================================
+
+Step 1: Ensure Backend is Running
+----------------------------------
+
+In a SEPARATE terminal:
+cd /home/user/ai-teaching-assistant/backend
+source ../venv310/bin/activate
+uvicorn app:app --reload --port 8000
+
+You should see:
+INFO:     Uvicorn running on http://127.0.0.1:8000
+
+Leave this terminal running!
+
+
+Step 2: Start Frontend Dev Server
+----------------------------------
+
+In your frontend terminal:
+cd /home/user/ai-teaching-assistant/humanoid/r3f-lipsync-tutorial
+npm run dev
+
+Expected output:
+  VITE v5.0.8  ready in 500 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+  ➜  press h + enter to show help
+
+
+Step 3: Open Browser
+---------------------
+
+Open your web browser and navigate to:
+http://localhost:5173
+
+You should see:
+✓ "Teaching Assistant" header
+✓ Three tabs: Q&A | Lectures | Games
+✓ Live2D Shizuka character in the center
+✓ "Start Recording" button at the bottom
+
+
+Step 4: Verify Live2D Model Loaded
+-----------------------------------
+
+Open browser DevTools (F12)
+Check Console tab
+
+Expected logs:
+✓ "Live2D model loaded successfully"
+✓ No red error messages
+
+If you see errors like:
+✗ "Failed to load Live2D model"
+→ Check that shizuku model files are in public/live2d-models/shizuku/
+
+================================================================================
+6. TESTING THE APPLICATION
+================================================================================
+
+Test 1: Voice Recording (Q&A Mode)
+-----------------------------------
+
+1. Click "Start Recording" button
+2. Allow microphone permissions
+3. Speak: "Hello, how are you?"
+4. Click "Stop Recording"
+5. Wait for response
+
+Expected behavior:
+✓ Button turns red when recording
+✓ Audio is sent to backend
+✓ Avatar's mouth moves during response
+✓ You hear TTS audio
+
+If fails:
+→ Check backend logs for errors
+→ Check browser console for network errors
+→ Verify microphone permissions granted
+
+
+Test 2: Lecture Mode
+---------------------
+
+1. Click "Lectures" tab
+2. Paste some text in the textarea:
+   "Today we will learn about addition. 2 plus 2 equals 4."
+3. Click "Summarize"
+4. Wait for AI summary
+5. Click "Speak Summary"
+
+Expected behavior:
+✓ Summary appears
+✓ Avatar speaks the summary with lip-sync
+✓ Mouth movements match speech
+
+If fails:
+→ Check GROQ_API_KEY in .env
+→ Check backend /speak endpoint
+
+
+Test 3: Games Launcher
+-----------------------
+
+1. Click "Games" tab
+2. Click "🎲 Launch Games" button
+3. Check for popup alert
+4. Look for Games window on desktop
+
+Expected behavior:
+✓ Alert: "Games launcher opened! Check your desktop..."
+✓ Separate Tkinter window opens with game list
+
+If fails:
+→ Check that Games/main.py exists
+→ Check backend /launch-games endpoint
+→ Verify Python Tkinter installed
+
+
+Test 4: Live2D Lip Sync
+------------------------
+
+1. Upload a WAV file or use microphone
+2. Get a response from the AI
+3. Watch the avatar closely
+
+Expected behavior:
+✓ Mouth opens/closes in sync with audio
+✓ Different mouth shapes for different sounds
+✓ Smooth animation transitions
+
+If fails:
+→ Check phoneme data in network tab
+→ Verify audio is playing
+→ Check Live2DAvatar.jsx console logs
+
+================================================================================
+7. TROUBLESHOOTING COMMON ISSUES
+================================================================================
+
+Issue 1: "npm install" fails
+-----------------------------
+
+Error: EACCES permission denied
+
+Solution:
+sudo chown -R $USER:$USER ~/.npm
+sudo chown -R $USER:$USER /home/user/ai-teaching-assistant/humanoid
+npm install
+
+
+Issue 2: Live2D Model Not Loading
+----------------------------------
+
+Error in console: "Failed to load Live2D model"
+
+Solutions:
+1. Verify model path:
+   ls public/live2d-models/shizuku/shizuku.model.json
+
+2. Check file permissions:
+   chmod -R 755 public/live2d-models/
+
+3. Try different model path in Live2DAvatar.jsx:
+   "/live2d-models/shizuku/shizuku.model3.json" (for Cubism 3)
+   "/live2d-models/shizuku/shizuku.model.json" (for Cubism 2)
+
+
+Issue 3: CORS Errors
+--------------------
+
+Error: "Access-Control-Allow-Origin"
+
+Solution:
+Backend should already allow CORS. If not, verify backend/app.py:
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+Issue 4: Avatar Too Large/Small
+--------------------------------
+
+Solution:
+Edit src/components/Live2DAvatar.jsx:
+
+// Around line 73-74
+const scaleX = (app.screen.width * 0.8) / model.width;  // Change 0.8
+const scaleY = (app.screen.height * 0.9) / model.height; // Change 0.9
+
+Increase = larger avatar
+Decrease = smaller avatar
+
+
+Issue 5: No Audio Playback
+---------------------------
+
+Solutions:
+1. Check browser audio not muted
+2. Check system volume
+3. Verify audio file exists:
+   curl http://127.0.0.1:8000/audio/[filename].wav
+4. Check browser console for audio errors
+
+
+Issue 6: Microphone Not Working
+--------------------------------
+
+Solutions:
+1. Grant microphone permissions in browser
+2. Check browser security settings
+3. Use HTTPS or localhost (required for mic access)
+4. Test with: navigator.mediaDevices.getUserMedia({audio:true})
+
+
+Issue 7: Vite Port Already in Use
+----------------------------------
+
+Error: "Port 5173 is already in use"
+
+Solution:
+Kill existing process:
+lsof -ti:5173 | xargs kill -9
+
+Or use different port:
+npm run dev -- --port 5174
+
+================================================================================
+8. PRODUCTION BUILD
+================================================================================
+
+Step 1: Build for Production
+-----------------------------
+
+npm run build
+
+Output will be in: dist/
+
+Expected:
+✓ Built in ~10-30 seconds
+✓ dist/ folder created
+✓ Optimized JS/CSS bundles
+
+
+Step 2: Preview Production Build
+---------------------------------
+
+npm run preview
+
+Opens at: http://localhost:4173
+
+
+Step 3: Deploy
+--------------
+
+Options:
+- Vercel: vercel deploy
+- Netlify: netlify deploy
+- Static hosting: Upload dist/ folder
+
+⚠️  Remember to:
+1. Set API_BASE to production URL
+2. Upload Live2D models separately
+3. Configure CORS for production domain
+
+================================================================================
+QUICK COMMAND REFERENCE
+================================================================================
+
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+
+# Clear cache and reinstall
+rm -rf node_modules package-lock.json
+npm cache clean --force
+npm install
+
+# Check package versions
+npm list --depth=0
+
+# Update all packages
+npm update
+
+================================================================================
+DIRECTORY STRUCTURE REFERENCE
+================================================================================
+
+humanoid/r3f-lipsync-tutorial/
+├── package.json                     # NPM dependencies
+├── vite.config.js                   # Vite configuration
+├── index.html                       # Entry HTML
+├── public/                          # Static assets
+│   └── live2d-models/
+│       └── shizuku/
+│           ├── shizuku.model.json   ← MUST EXIST
+│           ├── shizuku.moc          ← MUST EXIST
+│           └── textures/
+│               └── *.png            ← MUST EXIST
+└── src/
+    ├── main.jsx                     # React entry point
+    ├── App.jsx                      # Main app component
+    ├── config.js                    # API configuration
+    ├── index.css                    # Global styles
+    └── components/
+        ├── Live2DAvatar.jsx         # Live2D avatar (NEW)
+        ├── Avatar.jsx               # Old 3D avatar (unused)
+        └── Experience.jsx           # Old Three.js scene (unused)
+
+================================================================================
+SUPPORT & DOCUMENTATION
+================================================================================
+
+Main README: /home/user/ai-teaching-assistant/README.md
+Setup Guide: /home/user/ai-teaching-assistant/SETUP_GUIDE.md
+Crash Logs: /home/user/ai-teaching-assistant/crash.txt
+
+Live2D Resources:
+- Official Docs: https://www.live2d.com/en/
+- PIXI Live2D: https://github.com/guansss/pixi-live2d-display
+- Sample Models: https://www.live2d.com/en/download/sample-data/
+
+================================================================================
+END OF SETUP GUIDE
+================================================================================
