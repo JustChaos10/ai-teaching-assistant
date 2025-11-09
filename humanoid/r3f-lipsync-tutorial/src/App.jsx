@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { Canvas } from "@react-three/fiber";
-import { Experience } from "./components/Experience";
+import { Live2DAvatar } from "./components/Live2DAvatar";
 import { API_BASE } from "./config";
 import "./index.css";
 
@@ -190,15 +189,9 @@ export default function App() {
         )}
       </aside>
 
-      {/* ---- Canvas ---- */}
+      {/* ---- Live2D Avatar ---- */}
       <main className="canvasWrap">
-        <Canvas
-          shadows
-          camera={{ position: [0, 0, 8], fov: 42 }}
-          gl={{ alpha: false }}
-        >
-          <Experience audioUrl={audioUrl} phonemes={phonemes} />
-        </Canvas>
+        <Live2DAvatar audioUrl={audioUrl} phonemes={phonemes} />
       </main>
     </div>
   );

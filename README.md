@@ -1,7 +1,13 @@
 # 🧠 AI Teaching Assistant
 
-An **AI-powered teaching assistant** with interactive games, a 3D voice chatbot, and comprehensive teacher-student interfaces for Grade 1 learning — all built in Python and JavaScript.
+An **AI-powered teaching assistant** with interactive games, a **Live2D voice chatbot**, and comprehensive teacher-student interfaces for Grade 1 learning — all built in Python and JavaScript.
 The goal is to make learning more engaging through **gamification** and **AI-driven interaction**.
+
+## 🎉 **NEW: Live2D Integration**
+
+This project now uses **Live2D Cubism** with the **Shizuka character** for more expressive 2D animations and better lip-sync!
+
+**📖 [Complete Setup Guide →](./SETUP_GUIDE.md)**
 
 ---
 
@@ -12,10 +18,12 @@ The goal is to make learning more engaging through **gamification** and **AI-dri
   - Healthy vs. junk food detection
   - Image-based puzzle activities
 
-- 🤖 **Chatbot & Avatar (AI Teaching Assistant)**
+- 🤖 **Live2D Chatbot & Avatar (AI Teaching Assistant)**
+  - **NEW:** Live2D Shizuka character with expressive animations
   - AI chatbot that listens and speaks
   - Real-time lip-sync animation using **Rhubarb Lip Sync**
   - Natural TTS (Text-to-Speech) responses
+  - Parameter-based facial expressions
 
 - 👩‍🏫 **Teacher Interface (AI Teaching Assistant)**
   - Manage teaching prompts and sessions
@@ -124,7 +132,9 @@ Make sure you have:
 > C:\tools\rhubarb\rhubarb.exe
 > ```
 
-## 🚀 Getting Started
+## 🚀 Quick Start
+
+### For detailed setup instructions, see **[SETUP_GUIDE.md](./SETUP_GUIDE.md)**
 
 ### 1️⃣ Clone the Repository
 ```bash
@@ -140,7 +150,7 @@ python3.10 -m venv venv310
 # On Linux/Mac
 source venv310/bin/activate
 # On Windows
-virtualenv venv310\Scripts\activate
+venv310\Scripts\activate
 ```
 
 ---
@@ -150,14 +160,23 @@ virtualenv venv310\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 3️⃣ Install Rhubarb Lip SYNC
+### 4️⃣ Install Rhubarb Lip Sync
 
-download https://github.com/DanielSWolf/rhubarb-lip-sync/releases
-and save it in a location
-add that location to backend\config.py file under RHUBARB_PATH
+1. Download from https://github.com/DanielSWolf/rhubarb-lip-sync/releases
+2. Save it to a location (e.g., `C:\tools\rhubarb\`)
+3. Update `backend/config.py` with the path under `RHUBARB_PATH`
+
 ---
 
-### 4️⃣ Backend Setup (AI Teaching Assistant - FastAPI)
+### 5️⃣ Setup Live2D Model
+
+1. Download Shizuka model from https://www.live2d.com/en/download/sample-data/
+2. Extract to `humanoid/r3f-lipsync-tutorial/public/live2d-models/shizuku/`
+3. See [SETUP_GUIDE.md](./SETUP_GUIDE.md#live2d-model-setup) for detailed instructions
+
+---
+
+### 6️⃣ Backend Setup (AI Teaching Assistant - FastAPI)
 
 1. Navigate to the backend folder:
    ```bash
@@ -180,12 +199,11 @@ add that location to backend\config.py file under RHUBARB_PATH
 
 ---
 
-### 5️⃣ Frontend Setup (AI Teaching Assistant - React + Three.js Avatar)
+### 7️⃣ Frontend Setup (AI Teaching Assistant - React + Live2D Avatar)
 
-1. Open a **new terminal (make sure venv310 is activated again in this new terminal)**:
+1. Open a **new terminal**:
    ```bash
-   cd humanoid
-   cd r3f-lipsync-tutorial
+   cd humanoid/r3f-lipsync-tutorial
    ```
 
 2. Install frontend dependencies:
@@ -205,7 +223,7 @@ add that location to backend\config.py file under RHUBARB_PATH
 
 ---
 
-### 6️⃣ BudgetBridge 2 Setup (Grade 1 Learning Platform)
+### 8️⃣ BudgetBridge 2 Setup (Grade 1 Learning Platform)
 
 1. Open a **new terminal**:
    ```bash
@@ -248,7 +266,7 @@ The AI Teaching Assistant combines several modules:
 - **Voice Input:** User's speech is captured.
 - **FastAPI Backend:** Processes voice input using Whisper (STT), sends to LLM, generates TTS response.
 - **Rhubarb Lip Sync:** Creates lip-sync data from TTS audio.
-- **React Avatar:** Displays a 3D avatar with real-time lip-sync.
+- **Live2D Avatar:** Displays Shizuka character with real-time parameter-based lip-sync.
 - **Interactive Games:** Python-based games for gamified learning.
 - **BudgetBridge 2 Platform:** A separate full-stack application for lecture summarization and quiz generation using Groq API.
 
@@ -257,9 +275,9 @@ The AI Teaching Assistant combines several modules:
    ↓
 🧠 FastAPI backend (Whisper → LLM → TTS)
    ↓
-🎧 Audio + Rhubarb JSON
+🎧 Audio + Rhubarb Phoneme JSON
    ↓
-🧍 React Avatar (mouth animation syncs with phonemes)
+🎭 Live2D Avatar (PIXI.js renders Shizuka with mouth parameters synced to phonemes)
 
 📚 BudgetBridge 2 (Separate Flow)
    ↓
@@ -296,11 +314,11 @@ The AI Teaching Assistant combines several modules:
 | Voice Recognition | OpenAI Whisper |
 | Text-to-Speech | Murf.ai |
 | Lip Sync | Rhubarb Lip Sync |
-| 3D Rendering | React Three Fiber |
+| **2D Avatar Rendering** | **PIXI.js + Live2D Cubism** |
 | Backend | FastAPI |
 | Frontend | React + Vite |
-| Avatar Model | Ready Player Me |
-| Animations | Mixamo FBX |
+| **Avatar Model** | **Live2D Shizuka** |
+| **Character Animation** | **Live2D Parameters** |
 | Interactive Games | OpenCV |
 | **BudgetBridge 2** | |
 | Frontend | React (TypeScript), Wouter, TanStack Query, Shadcn UI, Tailwind CSS, Fredoka font |

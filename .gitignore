@@ -19,6 +19,9 @@ outputs/
 *.tmp
 *.wav
 *.json
+!package.json
+!package-lock.json
+!tsconfig.json
 tempCodeRunnerFile.*
 htmlcov/
 .tox/
@@ -93,4 +96,15 @@ backup_models/
 BudgetBridge 2/node_modules/
 BudgetBridge 2/dist/
 BudgetBridge 2/.local/
+
+# Live2D Models (licensed separately)
+humanoid/r3f-lipsync-tutorial/public/live2d-models/**/*.moc
+humanoid/r3f-lipsync-tutorial/public/live2d-models/**/*.moc3
+humanoid/r3f-lipsync-tutorial/public/live2d-models/**/*.model.json
+humanoid/r3f-lipsync-tutorial/public/live2d-models/**/*.model3.json
+humanoid/r3f-lipsync-tutorial/public/live2d-models/**/*.png
+humanoid/r3f-lipsync-tutorial/public/live2d-models/**/*.jpg
+humanoid/r3f-lipsync-tutorial/public/live2d-models/**/*.mtn
+humanoid/r3f-lipsync-tutorial/public/live2d-models/**/*.motion3.json
+!humanoid/r3f-lipsync-tutorial/public/live2d-models/README.md
 
