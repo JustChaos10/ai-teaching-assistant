@@ -8,6 +8,7 @@ import uuid
 import shutil
 import os
 import subprocess
+import sys
 from config import MURF_API_KEY, LECTURE_API_BASE, OUTPUT_DIR
 
 # ---------------- CONFIG ----------------
@@ -161,12 +162,29 @@ async def launch_games():
         if not main_py.exists():
             raise HTTPException(status_code=404, detail=f"Games launcher not found at {main_py}")
 
-        # Launch the game launcher in a new process
-        subprocess.Popen(
-            ["python", str(main_py)],
-            cwd=str(games_dir),
-            start_new_session=True
-        )
+        # Launch the game launcher in a new process.
+        # Use the current Python executable for reliability.
+        # On Windows make sure the new process window is shown (not minimized)
+        # by providing a STARTUPINFO and creationflags. On POSIX use
+        # start_new_session to detach.
+        if os.name == "nt":
+            # Configure Windows startup info to show the window normally
+            si = subprocess.STARTUPINFO()
+            si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            si.wShowWindow = subprocess.SW_SHOWNORMAL
+            creationflags = subprocess.CREATE_NEW_CONSOLE
+            subprocess.Popen(
+                [sys.executable, str(main_py)],
+                cwd=str(games_dir),
+                creationflags=creationflags,
+                startupinfo=si,
+            )
+        else:
+            subprocess.Popen(
+                [sys.executable, str(main_py)],
+                cwd=str(games_dir),
+                start_new_session=True,
+            )
 
         return JSONResponse({
             "status": "success",
