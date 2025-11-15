@@ -89,8 +89,10 @@ asset/gpt/
 asset/*.safetensors
 backup_models/
 
-# BudgetBridge 2 specific ignores
-BudgetBridge 2/node_modules/
-BudgetBridge 2/dist/
-BudgetBridge 2/.local/
-
+# Specific ignores for nested projects
+humanoid/2d mode integ/node_modules/
+humanoid/2d mode integ/dist/
+humanoid/r3f-lipsync-tutorial/node_modules/
+BudgetBridge 2/BudgetBridge 2/node_modules/
+BudgetBridge 2/BudgetBridge 2/dist/
+BudgetBridge 2/BudgetBridge 2/.local/
