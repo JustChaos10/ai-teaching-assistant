@@ -29,12 +29,20 @@ class GameLauncherApp:
         self.root.minsize(560, 520)
         self.root.resizable(True, True)
 
+        # Make window always on top
+        self.root.attributes('-topmost', True)
+        
+        # Center the window on screen
         self.root.update_idletasks()
         sw, sh = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
         ww, wh = map(int, self.root.geometry().split("+")[0].split("x"))
         x = (sw - ww) // 2
         y = (sh - wh) // 2
         self.root.geometry(f"{ww}x{wh}+{x}+{y}")
+        
+        # Force window to front and give it focus
+        self.root.lift()
+        self.root.focus_force()
 
         bg = "#FFF6D5"
         header_bg = "#FFE082"

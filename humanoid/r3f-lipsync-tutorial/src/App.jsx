@@ -5,7 +5,7 @@ import { API_BASE } from "./config";
 import "./index.css";
 
 export default function App() {
-  const [mode, setMode] = useState("qa"); // "qa" | "lecture"
+  const [mode, setMode] = useState("qa"); // "qa" | "lecture" | "games"
 
   // shared state to drive Avatar
   const [audioUrl, setAudioUrl] = useState(null);
@@ -71,6 +71,18 @@ export default function App() {
     setPhonemes(data.phonemes);
   }
 
+  // ---- Games ----
+  async function launchGames() {
+    try {
+      const r = await fetch(`${API_BASE}/launch-games`, { method: "POST" });
+      const data = await r.json();
+      if (data.error) return alert(data.error);
+      alert("Games launcher opened! Check your desktop for the game window.");
+    } catch (e) {
+      alert("Failed to launch games: " + e.message);
+    }
+  }
+
   return (
     <div className="app">
       {/* ---- Sidebar ---- */}
@@ -80,6 +92,7 @@ export default function App() {
         <div className="tabs">
           <button className={`tab ${mode === "qa" ? "active" : ""}`} onClick={() => setMode("qa")}>Q&A</button>
           <button className={`tab ${mode === "lecture" ? "active" : ""}`} onClick={() => setMode("lecture")}>Lectures</button>
+          <button className={`tab ${mode === "games" ? "active" : ""}`} onClick={() => setMode("games")}>Games</button>
         </div>
 
         {mode === "qa" ? (
@@ -101,6 +114,28 @@ export default function App() {
                 <div>Audio: {audioUrl ? "yes" : "—"}</div>
                 <div>Phonemes: {phonemes ? "yes" : "—"}</div>
               </div>
+            </div>
+          </div>
+        ) : mode === "games" ? (
+          <div className="stack">
+            <div className="card">
+              <h3>🎮 Interactive Games</h3>
+              <p style={{color:"var(--muted)", marginBottom:16}}>
+                Launch fun educational games for Grade 1 students!
+              </p>
+              <button className="btn primary" onClick={launchGames} style={{width:"100%", padding:"16px", fontSize:"18px"}}>
+                🎲 Launch Games
+              </button>
+            </div>
+
+            <div className="card">
+              <h3>Available Games</h3>
+              <ul style={{listStyle:"none", padding:0, color:"var(--muted)", fontSize:14}}>
+                <li>🖐 Finger Counting</li>
+                <li>🥗 Healthy vs Junk Food</li>
+                <li>🧩 Puzzle Games</li>
+                <li>📚 And more...</li>
+              </ul>
             </div>
           </div>
         ) : (
