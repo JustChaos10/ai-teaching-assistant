@@ -154,43 +154,52 @@ async def launch_games():
     """
     Launches the Games/main.py script which opens the game launcher GUI.
     """
+    import traceback
     try:
         # Get the path to the Games directory
         games_dir = Path(__file__).parent.parent / "Games"
         main_py = games_dir / "main.py"
+        
+        print(f"[DEBUG] Backend dir: {Path(__file__).parent}")
+        print(f"[DEBUG] Games dir: {games_dir}")
+        print(f"[DEBUG] Main.py path: {main_py}")
+        print(f"[DEBUG] Main.py exists: {main_py.exists()}")
+        print(f"[DEBUG] Python executable: {sys.executable}")
 
         if not main_py.exists():
-            raise HTTPException(status_code=404, detail=f"Games launcher not found at {main_py}")
+            error_msg = f"Games launcher not found at {main_py}"
+            print(f"[ERROR] {error_msg}")
+            raise HTTPException(status_code=404, detail=error_msg)
 
         # Launch the game launcher in a new process.
         # Use the current Python executable for reliability.
-        # On Windows make sure the new process window is shown (not minimized)
-        # by providing a STARTUPINFO and creationflags. On POSIX use
-        # start_new_session to detach.
+        print(f"[DEBUG] Launching subprocess...")
         if os.name == "nt":
-            # Configure Windows startup info to show the window normally
-            si = subprocess.STARTUPINFO()
-            si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            si.wShowWindow = subprocess.SW_SHOWNORMAL
-            creationflags = subprocess.CREATE_NEW_CONSOLE
-            subprocess.Popen(
+            # Windows: Launch without console window (GUI only)
+            process = subprocess.Popen(
                 [sys.executable, str(main_py)],
                 cwd=str(games_dir),
-                creationflags=creationflags,
-                startupinfo=si,
+                creationflags=subprocess.CREATE_NO_WINDOW,
             )
+            print(f"[DEBUG] Process launched with PID: {process.pid}")
         else:
-            subprocess.Popen(
+            # POSIX: Detach from parent process
+            process = subprocess.Popen(
                 [sys.executable, str(main_py)],
                 cwd=str(games_dir),
                 start_new_session=True,
             )
+            print(f"[DEBUG] Process launched with PID: {process.pid}")
 
         return JSONResponse({
             "status": "success",
             "message": "Games launcher started successfully"
         })
 
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error launching games: {e}")
+        error_detail = f"Error launching games: {str(e)}\n{traceback.format_exc()}"
+        print(f"[ERROR] {error_detail}")
+        raise HTTPException(status_code=500, detail=str(e))
 

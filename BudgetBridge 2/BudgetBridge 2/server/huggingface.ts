@@ -1,9 +1,4 @@
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-import dotenv from "dotenv";
-import path from "path";
-
-// Load .env from the project root
-dotenv.config({ path: path.resolve(__dirname, "../../../../.env") });
 
 const apiKey = process.env.GROQ_API_KEY;
 

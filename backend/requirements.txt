@@ -20,3 +20,5 @@
   pybase16384
   av
   pydub
+  fastapi
+  uvicorn[standard]

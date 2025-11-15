@@ -7,6 +7,13 @@ export function Avatar({ audioUrl, phonemes = [] }) {
   const [error, setError] = useState(null);
   const modelRef = useRef(null);
   const animationFrameRef = useRef(null);
+  const audioRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const analyserRef = useRef(null);
+  const lipSyncValueRef = useRef(0);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const currentMotionRef = useRef(null);
+  const motionManagerRef = useRef(null);
 
   useEffect(() => {
     console.log('Avatar mounted, canvas:', canvasRef.current);
@@ -66,6 +73,7 @@ export function Avatar({ audioUrl, phonemes = [] }) {
         const { CubismBreath } = await import('../vendor/Framework/effect/cubismbreath.js');
         const { BreathParameterData } = await import('../vendor/Framework/effect/cubismbreath.js');
         const { csmVector } = await import('../vendor/Framework/type/csmvector.js');
+        const { CubismIdHandle } = await import('../vendor/Framework/id/cubismid.js');
         
         CubismFramework = Framework;
         console.log('Framework modules loaded');
@@ -244,7 +252,12 @@ export function Avatar({ audioUrl, phonemes = [] }) {
         
         renderer.setMvpMatrix(projection);
         
-        modelRef.current = { gl, userModel, model, renderer, projection, CubismFramework, breath, pose, physics };
+        // Get the mouth parameter ID using the ID manager
+        const mouthParamId = CubismFramework.getIdManager().getId('ParamMouthOpenY');
+        console.log('Mouth parameter ID created:', mouthParamId);
+        
+        modelRef.current = { gl, userModel, model, renderer, projection, CubismFramework, breath, pose, physics, mouthParamId };
+        setIsLoaded(true);
         setIsLoaded(true);
         setError(null);
         console.log('Live2D model fully loaded!');
@@ -266,7 +279,7 @@ export function Avatar({ audioUrl, phonemes = [] }) {
       const animate = () => {
         if (!modelRef.current) return;
         
-        const { gl, userModel, model, renderer, projection, breath, pose, physics } = modelRef.current;
+        const { gl, userModel, model, renderer, projection, breath, pose, physics, mouthParamId } = modelRef.current;
         
         // Calculate delta time
         const now = performance.now();
@@ -291,8 +304,33 @@ export function Avatar({ audioUrl, phonemes = [] }) {
           // Log all parameter IDs to see their format
           for (let i = 0; i < model.getParameterCount(); i++) {
             const paramId = model.getParameterId(i);
-            console.log(`Parameter ${i}:`, paramId, typeof paramId);
+            const paramIdStr = String(paramId);
+            console.log(`Parameter ${i}:`, paramIdStr, typeof paramId);
           }
+        }
+        
+        // Apply audio-based lip sync BEFORE loading saved parameters
+        if (analyserRef.current && audioRef.current && !audioRef.current.paused) {
+          const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+          analyserRef.current.getByteFrequencyData(dataArray);
+          
+          // Calculate average volume
+          let sum = 0;
+          for (let i = 0; i < dataArray.length; i++) {
+            sum += dataArray[i];
+          }
+          const average = sum / dataArray.length;
+          
+          // Normalize to 0-1 range and smooth
+          const targetValue = Math.min(average / 60, 1.2); // More sensitive
+          lipSyncValueRef.current += (targetValue - lipSyncValueRef.current) * 0.6;
+          
+          if (frameCount % 30 === 0) {
+            console.log('Audio average:', average, 'Lip sync value:', lipSyncValueRef.current);
+          }
+        } else {
+          // Reset mouth when not speaking
+          lipSyncValueRef.current *= 0.85;
         }
         
         // Load saved parameters
@@ -311,6 +349,15 @@ export function Avatar({ audioUrl, phonemes = [] }) {
         // Apply pose
         if (pose) {
           pose.updateParameters(model, deltaTime);
+        }
+        
+        // NOW apply lip sync - AFTER other animations
+        if (mouthParamId) {
+          model.setParameterValueById(mouthParamId, lipSyncValueRef.current);
+          
+          if (frameCount % 60 === 0) {
+            console.log('Setting mouth to:', lipSyncValueRef.current);
+          }
         }
         
         // Save parameters state
@@ -342,6 +389,18 @@ export function Avatar({ audioUrl, phonemes = [] }) {
         cancelAnimationFrame(animationFrameRef.current);
       }
       
+      // Stop audio if playing
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      
+      // Close audio context
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+      
       if (modelRef.current) {
         const { userModel, renderer, CubismFramework } = modelRef.current;
         
@@ -357,7 +416,58 @@ export function Avatar({ audioUrl, phonemes = [] }) {
 
   useEffect(() => {
     console.log('Audio/phonemes changed:', { audioUrl, phonemes });
-  }, [audioUrl, phonemes]);
+    
+    // Play audio when audioUrl is provided
+    if (audioUrl) {
+      console.log('Creating and playing audio from URL:', audioUrl);
+      
+      // Stop previous audio if playing
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      
+      // Create new audio element
+      const audio = new Audio(audioUrl);
+      audio.crossOrigin = "anonymous";
+      audioRef.current = audio;
+      
+      // Setup Web Audio API for lip sync
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      
+      const audioContext = audioContextRef.current;
+      const source = audioContext.createMediaElementSource(audio);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      analyserRef.current = analyser;
+      
+      // Connect: source -> analyser -> destination
+      source.connect(analyser);
+      analyser.connect(audioContext.destination);
+      
+      // Set speaking state
+      setIsSpeaking(true);
+      
+      // Play the audio
+      audio.play().catch(err => {
+        console.error('Audio playback failed:', err);
+      });
+      
+      // Clean up when audio ends
+      audio.onended = () => {
+        console.log('Audio playback finished');
+        lipSyncValueRef.current = 0;
+        audioRef.current = null;
+        setIsSpeaking(false);
+      };
+    } else {
+      // Reset lip sync when no audio
+      lipSyncValueRef.current = 0;
+      setIsSpeaking(false);
+    }
+  }, [audioUrl]);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>

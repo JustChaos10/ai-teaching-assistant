@@ -148,6 +148,10 @@ textarea {
   background: linear-gradient(180deg, #28c76f, #20a95e);
   border-color: #1c8f51;
 }
+.btn.danger {
+  background: linear-gradient(180deg, #ff4b4b, #d13a3a);
+  border-color: #a72a2a;
+}
 .btn.ghost {
   background: transparent;
 }
@@ -171,6 +175,8 @@ textarea {
   align-items: center;
   justify-content: center;
 }
+
+
 
 @media (max-width: 768px) {
   .app {

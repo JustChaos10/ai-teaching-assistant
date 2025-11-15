@@ -1,26 +1,76 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { API_BASE } from "./config";
 import { Avatar } from './components/Avatar';
 
 export default function App() {
-  const [mode, setMode] = useState("qa"); // "qa" | "lecture"
+  const [mode, setMode] = useState("qa"); // "qa" | "lecture" | "games"
 
   // shared state to drive Avatar (kept for future Live2D lip-sync)
   const [audioUrl, setAudioUrl] = useState(null);
   const [phonemes, setPhonemes] = useState(null);
 
-  // ---- Q&A (upload) ----
-  const [qaFile, setQaFile] = useState(null);
-  async function sendQA() {
-    if (!qaFile) return alert("Pick a WAV first.");
-    const form = new FormData();
-    form.append("file", qaFile);
-    const r = await fetch(`${API_BASE}/ask`, { method: "POST", body: form });
-    const data = await r.json();
-    if (data.error) return alert(data.error);
-    setAudioUrl(`${API_BASE}${data.audio_url}`);
-    setPhonemes(data.phonemes);
-  }
+  // ---- Q&A (record) ----
+  const [recording, setRecording] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+
+  const startRecording = async () => {
+    setAudioUrl(null);
+    setPhonemes(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      audioChunksRef.current = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        setProcessing(true);
+        const blob = new Blob(audioChunksRef.current, { type: "audio/wav" });
+        const formData = new FormData();
+        formData.append("file", blob, "input.wav");
+
+        try {
+          const res = await fetch(`${API_BASE}/ask`, {
+            method: "POST",
+            body: formData,
+          });
+          const data = await res.json();
+
+          if (data.audio_url && data.phonemes) {
+            setAudioUrl(`${API_BASE}${data.audio_url}`);
+            setPhonemes(data.phonemes);
+          } else {
+            console.error("Invalid backend response:", data);
+            alert("Sorry, I couldn't process that. " + (data.error || ""));
+          }
+        } catch (err) {
+          console.error("Backend request failed:", err);
+          alert("Sorry, something went wrong with the request.");
+        } finally {
+          setProcessing(false);
+        }
+      };
+
+      recorder.start();
+      setRecording(true);
+    } catch (err) {
+      console.error("Microphone error:", err);
+      alert("Could not access the microphone. Please check permissions.");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && recording) {
+      mediaRecorderRef.current.stop();
+      setRecording(false);
+    }
+  };
+
 
   // ---- Lectures ----
   const [lectures, setLectures] = useState([]);
@@ -58,15 +108,32 @@ export default function App() {
 
   async function speakSummary() {
     if (!summary.trim()) return;
-    const r = await fetch(`${API_BASE}/speak`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: summary }),
-    });
-    const data = await r.json();
-    if (data.error) return alert(data.error);
-    setAudioUrl(`${API_BASE}${data.audio_url}`);
-    setPhonemes(data.phonemes);
+    setProcessing(true);
+    try {
+      const r = await fetch(`${API_BASE}/speak`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: summary }),
+      });
+      const data = await r.json();
+      if (data.error) return alert(data.error);
+      setAudioUrl(`${API_BASE}${data.audio_url}`);
+      setPhonemes(data.phonemes);
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  // ---- Games ----
+  async function launchGames() {
+    try {
+      const r = await fetch(`${API_BASE}/launch-games`, { method: "POST" });
+      const data = await r.json();
+      if (data.error) return alert(data.error);
+      alert("Games launcher opened! Check your desktop for the game window.");
+    } catch (e) {
+      alert("Failed to launch games: " + e.message);
+    }
   }
 
   return (
@@ -78,16 +145,21 @@ export default function App() {
         <div className="tabs">
           <button className={`tab ${mode === "qa" ? "active" : ""}`} onClick={() => setMode("qa")}>Q&A</button>
           <button className={`tab ${mode === "lecture" ? "active" : ""}`} onClick={() => setMode("lecture")}>Lectures</button>
+          <button className={`tab ${mode === "games" ? "active" : ""}`} onClick={() => setMode("games")}>Games</button>
         </div>
 
         {mode === "qa" ? (
           <div className="stack">
             <div className="card">
-              <h3>Ask (upload WAV)</h3>
+              <h3>Ask (Record Audio)</h3>
               <div className="stack">
-                <input type="file" accept=".wav" onChange={(e) => setQaFile(e.target.files?.[0] ?? null)} />
+                <button 
+                  className={`btn ${recording ? 'danger' : 'ok'}`}
+                  onClick={recording ? stopRecording : startRecording}
+                >
+                  {recording ? "Stop Recording" : "Start Recording"}
+                </button>
                 <div className="row">
-                  <button className="btn primary" onClick={sendQA}>Send</button>
                   <button className="btn ghost" onClick={() => { setAudioUrl(null); setPhonemes(null); }}>Reset</button>
                 </div>
               </div>
@@ -99,6 +171,32 @@ export default function App() {
                 <div>Audio: {audioUrl ? "yes" : "—"}</div>
                 <div>Phonemes: {phonemes ? "yes" : "—"}</div>
               </div>
+            </div>
+          </div>
+        ) : mode === "games" ? (
+          <div className="stack">
+            <div className="card">
+              <h3>🎮 Interactive Games</h3>
+              <p style={{ color: "var(--muted)", marginBottom: 16 }}>
+                Launch fun educational games for Grade 1 students!
+              </p>
+              <button 
+                className="btn primary" 
+                onClick={launchGames} 
+                style={{ width: "100%", padding: "16px", fontSize: "18px" }}
+              >
+                🎲 Launch Games
+              </button>
+            </div>
+
+            <div className="card">
+              <h3>Available Games</h3>
+              <ul style={{ listStyle: "none", padding: 0, color: "var(--muted)", fontSize: 14 }}>
+                <li>🖐 Finger Counting</li>
+                <li>🥗 Healthy vs Junk Food</li>
+                <li>🧩 Puzzle Games</li>
+                <li>📚 And more...</li>
+              </ul>
             </div>
           </div>
         ) : (
@@ -156,7 +254,48 @@ export default function App() {
       {/* ---- Avatar Area (Live2D Canvas) ---- */}
       <main className="canvasWrap" style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0b1020' }}>
         <Avatar audioUrl={audioUrl} phonemes={phonemes} />
+        
+        {/* Processing Overlay */}
+        {processing && (
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            gap: '20px'
+          }}>
+            <div style={{
+              width: '60px',
+              height: '60px',
+              border: '4px solid rgba(255, 255, 255, 0.3)',
+              borderTop: '4px solid white',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }}></div>
+            <div style={{
+              color: 'white',
+              fontSize: '18px',
+              fontWeight: '500'
+            }}>
+              Processing...
+            </div>
+          </div>
+        )}
       </main>
+      
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
