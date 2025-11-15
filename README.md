@@ -1,6 +1,6 @@
 # 🧠 AI Teaching Assistant
 
-An **AI-powered teaching assistant** with interactive games, a 3D voice chatbot, and comprehensive teacher-student interfaces for Grade 1 learning — all built in Python and JavaScript.
+An **AI-powered teaching assistant** with interactive games, a 2D Live2D voice chatbot, and comprehensive teacher-student interfaces for Grade 1 learning — all built in Python and JavaScript.
 The goal is to make learning more engaging through **gamification** and **AI-driven interaction**.
 
 ---
@@ -11,11 +11,14 @@ The goal is to make learning more engaging through **gamification** and **AI-dri
   - Finger counting and gesture games
   - Healthy vs. junk food detection
   - Image-based puzzle activities
+  - Launch games directly from the web interface
 
 - 🤖 **Chatbot & Avatar (AI Teaching Assistant)**
   - AI chatbot that listens and speaks
-  - Real-time lip-sync animation using **Rhubarb Lip Sync**
+  - **Live2D 2D character** with real-time audio-driven lip-sync
   - Natural TTS (Text-to-Speech) responses
+  - Q&A mode, Lecture mode, and Games launcher
+  - Processing indicator during audio generation
 
 - 👩‍🏫 **Teacher Interface (AI Teaching Assistant)**
   - Manage teaching prompts and sessions
@@ -37,30 +40,37 @@ The goal is to make learning more engaging through **gamification** and **AI-dri
 
 ```
 ai-teaching-assistant/
-├── backend/                         # 🧠 FastAPI backend (STT → LLM → TTS → Rhubarb)
-│   ├── app.py                        # FastAPI entry point
+├── backend/                         # 🧠 FastAPI backend (STT → LLM → TTS)
+│   ├── app.py                        # FastAPI entry point with /launch-games endpoint
 │   ├── teacher_chatbot_app.py        # Chatbot pipeline integration
 │   ├── teacher_chatbot.py            # Core chatbot class
 │   ├── rag_system.py                 # RAG (Retrieval-Augmented Generation)
 │   ├── docs/                         # Teaching PDFs for RAG ingestion
-│   ├── outputs/                      # Generated TTS audio + lip sync JSONs
+│   ├── outputs/                      # Generated TTS audio files
 │   ├── templates/test.html           # Upload test UI
 │   └── requirements.txt              # Backend dependencies
 │
-├── humanoid/                         # 🧍 React + Three.js avatar frontend
-│   ├── public/
-│   │   ├── animations/               # FBX animations (Idle, Greeting, etc.)
-│   │   ├── models/                   # Avatar GLB model
-│   │   ├── audios/                   # Audio samples
-│   │   └── textures/                 # Background textures
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── Avatar.jsx            # Lip-sync & TTS logic
-│   │   │   └── Experience.jsx        # Scene setup (lighting, environment)
-│   │   ├── App.jsx                   # Main React app
-│   │   └── main.jsx                  # Vite entry point
-│   ├── vite.config.js                # Frontend config
-│   └── package.json                  # Frontend dependencies
+├── humanoid/                         # 🧍 2D Live2D avatar frontend
+│   ├── 2d mode integ/                # **ACTIVE** - Live2D integration
+│   │   ├── public/
+│   │   │   └── Resources/            # Live2D Hiyori model files
+│   │   │       └── Hiyori/
+│   │   │           ├── Hiyori.model3.json
+│   │   │           ├── Hiyori.moc3
+│   │   │           ├── *.png (textures)
+│   │   │           ├── *.motion3.json (animations)
+│   │   │           └── *.physics3.json
+│   │   ├── src/
+│   │   │   ├── components/
+│   │   │   │   └── Avatar.jsx        # Live2D rendering & audio-driven lip-sync
+│   │   │   ├── vendor/               # Cubism SDK for Web 5-r.4
+│   │   │   ├── App.jsx               # Main React app with Q&A/Lectures/Games tabs
+│   │   │   └── main.jsx              # Vite entry point
+│   │   ├── vite.config.js            # Frontend config
+│   │   └── package.json              # Frontend dependencies
+│   │
+│   └── r3f-lipsync-tutorial/         # Legacy 3D avatar (not currently used)
+│       └── ...
 │
 ├── Games/                            # 🎮 Interactive learning modules
 │   ├── create_game.py                # Game creation utility
@@ -117,12 +127,9 @@ Make sure you have:
 - [Python 3.10+](https://www.python.org/downloads/)
 - [Node.js 18+](https://nodejs.org/en/download/)
 - [Git](https://git-scm.com/downloads/)
-- [Rhubarb Lip Sync](https://github.com/DanielSWolf/rhubarb-lip-sync/releases)
+- **Live2D Cubism SDK for Web** (included in `humanoid/2d mode integ/src/vendor/`)
 
-> 💡 On Windows, install Rhubarb to:
-> ```
-> C:\tools\rhubarb\rhubarb.exe
-> ```
+> 💡 **Note:** Rhubarb Lip Sync is no longer required. The new 2D Live2D avatar uses Web Audio API for audio-driven lip sync.
 
 ## 🚀 Getting Started
 
@@ -150,11 +157,6 @@ virtualenv venv310\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 3️⃣ Install Rhubarb Lip SYNC
-
-download https://github.com/DanielSWolf/rhubarb-lip-sync/releases
-and save it in a location
-add that location to backend\config.py file under RHUBARB_PATH
 ---
 
 ### 4️⃣ Backend Setup (AI Teaching Assistant - FastAPI)
@@ -180,12 +182,12 @@ add that location to backend\config.py file under RHUBARB_PATH
 
 ---
 
-### 5️⃣ Frontend Setup (AI Teaching Assistant - React + Three.js Avatar)
+### 5️⃣ Frontend Setup (AI Teaching Assistant - Live2D Avatar)
 
-1. Open a **new terminal (make sure venv310 is activated again in this new terminal)**:
+1. Open a **new terminal**:
    ```bash
    cd humanoid
-   cd r3f-lipsync-tutorial
+   cd "2d mode integ"
    ```
 
 2. Install frontend dependencies:
@@ -202,6 +204,8 @@ add that location to backend\config.py file under RHUBARB_PATH
    ```bash
    http://localhost:5173/
    ```
+
+> 💡 The Live2D Cubism SDK is already included in `src/vendor/`. The Hiyori model files are in `public/Resources/Hiyori/`.
 
 ---
 
@@ -245,11 +249,10 @@ PORT=5000 # Optional; default for BudgetBridge 2 server
 ## 🧠 How It Works
 
 The AI Teaching Assistant combines several modules:
-- **Voice Input:** User's speech is captured.
+- **Voice Input:** User's speech is captured via browser microphone.
 - **FastAPI Backend:** Processes voice input using Whisper (STT), sends to LLM, generates TTS response.
-- **Rhubarb Lip Sync:** Creates lip-sync data from TTS audio.
-- **React Avatar:** Displays a 3D avatar with real-time lip-sync.
-- **Interactive Games:** Python-based games for gamified learning.
+- **Live2D Avatar:** Displays a 2D character with real-time audio-driven lip-sync using Web Audio API.
+- **Interactive Games:** Python-based games for gamified learning, launched from web interface.
 - **BudgetBridge 2 Platform:** A separate full-stack application for lecture summarization and quiz generation using Groq API.
 
 ```
@@ -257,9 +260,15 @@ The AI Teaching Assistant combines several modules:
    ↓
 🧠 FastAPI backend (Whisper → LLM → TTS)
    ↓
-🎧 Audio + Rhubarb JSON
+🎧 Audio (WAV file)
    ↓
-🧍 React Avatar (mouth animation syncs with phonemes)
+🧍 Live2D Avatar (Web Audio API analyzes audio → ParamMouthOpenY lip-sync)
+
+🎮 Games Launcher
+   ↓
+🖱️ Click "Launch Games" button
+   ↓
+🐍 Backend launches Games/main.py (Tkinter GUI)
 
 📚 BudgetBridge 2 (Separate Flow)
    ↓
@@ -277,13 +286,13 @@ The AI Teaching Assistant combines several modules:
 | Task | Command |
 |------|----------|
 | Run AI Teaching Assistant Backend | `cd backend && uvicorn app:app --reload --port 8000` |
-| Run AI Teaching Assistant Frontend | `cd humanoid && npm run dev` |
-| Run BudgetBridge 2 Dev Server | `cd BudgetBridge 2/BudgetBridge 2 && npm run dev` |
+| Run AI Teaching Assistant Frontend | `cd "humanoid/2d mode integ" && npm run dev` |
+| Run BudgetBridge 2 Dev Server | `cd "BudgetBridge 2/BudgetBridge 2" && npm run dev` |
 | Install Python Dependencies | `pip install -r requirements.txt` |
-| Install AI Teaching Assistant Frontend Deps | `cd humanoid && npm install` |
-| Install BudgetBridge 2 Frontend Deps | `cd BudgetBridge 2/BudgetBridge 2 && npm install` |
-| Build AI Teaching Assistant Frontend | `cd humanoid && npm run build` |
-| Build BudgetBridge 2 Frontend | `cd BudgetBridge 2/BudgetBridge 2 && npm run build` |
+| Install AI Teaching Assistant Frontend Deps | `cd "humanoid/2d mode integ" && npm install` |
+| Install BudgetBridge 2 Frontend Deps | `cd "BudgetBridge 2/BudgetBridge 2" && npm install` |
+| Build AI Teaching Assistant Frontend | `cd "humanoid/2d mode integ" && npm run build` |
+| Build BudgetBridge 2 Frontend | `cd "BudgetBridge 2/BudgetBridge 2" && npm run build` |
 | Clean npm cache | `npm cache clean --force` |
 
 ---
@@ -295,13 +304,13 @@ The AI Teaching Assistant combines several modules:
 | **AI Teaching Assistant** | |
 | Voice Recognition | OpenAI Whisper |
 | Text-to-Speech | Murf.ai |
-| Lip Sync | Rhubarb Lip Sync |
-| 3D Rendering | React Three Fiber |
+| Lip Sync | Web Audio API (frequency analysis) |
+| 2D Rendering | Live2D Cubism SDK for Web 5-r.4 |
 | Backend | FastAPI |
-| Frontend | React + Vite |
-| Avatar Model | Ready Player Me |
-| Animations | Mixamo FBX |
-| Interactive Games | OpenCV |
+| Frontend | React + Vite + PixiJS |
+| Avatar Model | Live2D Hiyori (Cubism model) |
+| Animations | CubismBreath, CubismPhysics, CubismPose |
+| Interactive Games | OpenCV, Tkinter |
 | **BudgetBridge 2** | |
 | Frontend | React (TypeScript), Wouter, TanStack Query, Shadcn UI, Tailwind CSS, Fredoka font |
 | Backend | Express.js, Groq API, Mongoose (for MongoDB persistence) |
@@ -329,8 +338,10 @@ The AI Teaching Assistant combines several modules:
 
 You can host:
 - **AI Teaching Assistant Backend:** Render / Railway / AWS EC2
-- **AI Teaching Assistant Frontend:** Vercel / Netlify
+- **AI Teaching Assistant Frontend:** Vercel / Netlify (build the `humanoid/2d mode integ` folder)
 - **BudgetBridge 2:** Replit Autoscale / Render / Vercel / Netlify
+
+> 💡 **Live2D Note:** The Cubism SDK files are in `humanoid/2d mode integ/src/vendor/`. The Hiyori model is in `public/Resources/Hiyori/`. Both should be included when deploying.
 
 ---
 
