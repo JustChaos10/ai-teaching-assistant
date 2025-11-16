@@ -15,7 +15,7 @@ export const modelConfig = {
   // Model-specific settings (optional overrides)
   models: {
     Haru: {
-      scale: 0.8,
+      scale: 1.2,
       position: { x: 0.0, y: 0.0 }
     },
     Hiyori: {
@@ -23,23 +23,23 @@ export const modelConfig = {
       position: { x: 0.0, y: 0.0 }
     },
     Mao: {
-      scale: 0.8,
+      scale: 1.2,
       position: { x: 0.0, y: 0.0 }
     },
     Mark: {
-      scale: 0.8,
+      scale: 1.2,
       position: { x: 0.0, y: 0.0 }
     },
     Natori: {
-      scale: 0.8,
+      scale: 1.2,
       position: { x: 0.0, y: 0.0 }
     },
     Rice: {
-      scale: 0.8,
+      scale: 1.2,
       position: { x: 0.0, y: 0.0 }
     },
     Wanko: {
-      scale: 0.8,
+      scale: 1.2,
       position: { x: 0.0, y: 0.0 }
     }
   }

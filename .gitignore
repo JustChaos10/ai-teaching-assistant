@@ -93,6 +93,11 @@ backup_models/
 humanoid/2d mode integ/node_modules/
 humanoid/2d mode integ/dist/
 humanoid/r3f-lipsync-tutorial/node_modules/
+new-backend/node_modules/
+new-backend/dist/
 BudgetBridge 2/BudgetBridge 2/node_modules/
 BudgetBridge 2/BudgetBridge 2/dist/
 BudgetBridge 2/BudgetBridge 2/.local/
+BudgetBridge 2/BudgetBridge 3/node_modules/
+BudgetBridge 2/BudgetBridge 3/dist/
+BudgetBridge 2/BudgetBridge 3/.local/
