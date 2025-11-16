@@ -23,7 +23,7 @@ export async function summarizeForGrade1(text: string): Promise<string> {
     console.log("AI_Prompt:\n" + trunc(prompt));
     console.log("Content:\n" + trunc(text));
 
-    const apiKey = process.env.GROQ_API_KEY || "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";
+    const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
       console.warn("GROQ_API_KEY not set. Falling back to manual simplifier.");
       const fallback = text.slice(0, 600);
@@ -92,7 +92,7 @@ export async function generateQuizQuestions(
   count: number = 5
 ): Promise<GeneratedQuestion[]> {
   const model = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
-  const apiKey = process.env.GROQ_API_KEY || "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";
+  const apiKey = process.env.GROQ_API_KEY;
 
   const instruction = [
     "Create fun, interactive multiple-choice questions for Grade 1 students based on the following lesson.",

@@ -1,6 +1,9 @@
 # --- ENVIRONMENTS ---
 venv310/
 .env
+.env.*
+**/.env
+**/.env.*
 .venv/
 env/
 venv/
