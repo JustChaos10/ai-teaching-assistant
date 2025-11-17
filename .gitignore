@@ -16,54 +16,20 @@ __pycache__/
 *.pyd
 *$py.class
 
+# --- NODE MODULES ---
+node_modules/
+**/node_modules/
+
 # --- OUTPUTS & TEMP FILES ---
 outputs/
 *.log
 *.tmp
 *.wav
 tempCodeRunnerFile.*
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-.pytest_cache/
-.hypothesis/
 
-# --- DISTRIBUTION / PACKAGING ---
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# --- PYINSTALLER ---
-*.manifest
-*.spec
-
-# --- JUPYTER NOTEBOOK ---
-.ipynb_checkpoints
-
-# --- FRONTEND / NODE ---
-node_modules/
-dist/
-build/
-*.lock
+# --- OS FILES ---
+.DS_Store
+Thumbs.db
 
 # --- IDEs and EDITORS ---
 .vscode/
@@ -74,32 +40,7 @@ build/
 *.ipr
 *.iws
 
-# --- LOGS AND DEBUG ---
-*.log
-*.pot
-*.pyc
-
-# --- OS FILES ---
-.DS_Store
-Thumbs.db
-
-# --- OTHER FILES TO IGNORE ---
-*.exe
-
-# Large model files (excluded from GitHub)
+# --- LARGE MODEL FILES ---
 asset/gpt/
 asset/*.safetensors
 backup_models/
-
-# Specific ignores for nested projects
-humanoid/2d mode integ/node_modules/
-humanoid/2d mode integ/dist/
-humanoid/r3f-lipsync-tutorial/node_modules/
-new-backend/node_modules/
-new-backend/dist/
-BudgetBridge 2/BudgetBridge 2/node_modules/
-BudgetBridge 2/BudgetBridge 2/dist/
-BudgetBridge 2/BudgetBridge 2/.local/
-BudgetBridge 2/BudgetBridge 3/node_modules/
-BudgetBridge 2/BudgetBridge 3/dist/
-BudgetBridge 2/BudgetBridge 3/.local/
