@@ -1,0 +1,36 @@
+{
+    "title": "Healthy VS Junk",
+    "template": "Binary Choice",
+    "items": [
+        {
+            "image_path": "created_games\\Healthy VS Junk\\apple.jpg",
+            "question": "What is this?",
+            "answer": "yes"
+        },
+        {
+            "image_path": "created_games\\Healthy VS Junk\\broccoli.jpg",
+            "question": "What is this?",
+            "answer": "yes"
+        },
+        {
+            "image_path": "created_games\\Healthy VS Junk\\burger.jpg",
+            "question": "What is this?",
+            "answer": "no"
+        },
+        {
+            "image_path": "created_games\\Healthy VS Junk\\carrot.jpg",
+            "question": "What is this?",
+            "answer": "yes"
+        },
+        {
+            "image_path": "created_games\\Healthy VS Junk\\donut.jpg",
+            "question": "What is this?",
+            "answer": "no"
+        },
+        {
+            "image_path": "created_games\\Healthy VS Junk\\pizza.jpg",
+            "question": "What is this?",
+            "answer": "no"
+        }
+    ]
+}

@@ -21,7 +21,6 @@ outputs/
 *.log
 *.tmp
 *.wav
-*.json
 tempCodeRunnerFile.*
 htmlcov/
 .tox/
