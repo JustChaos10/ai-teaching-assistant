@@ -157,11 +157,17 @@ class RAGSystem:
             except Exception as e:
                 print(f"[WARNING] Failed to load existing index: {str(e)}")
                 self.vector_store = None
-        else:
-            if self.embeddings_available:
-                print("[DOCS] Ready for document ingestion...")
             else:
-                print("[DOCS] Running in offline mode - limited functionality available")
+                if self.embeddings_available:
+                    print("[DOCS] Ready for document ingestion...")
+                else:
+                    print("[DOCS] Running in offline mode - limited functionality available")
+
+    def _language_display_name(self, language: Optional[str]) -> str:
+        mapping = {"en": "English", "ta": "Tamil"}
+        if not language:
+            return "English"
+        return mapping.get(language.lower(), "English")
 
     def _load_embeddings_with_retry(self, max_retries=3) -> tuple:
         """Load embeddings with retry mechanism and cache clearing."""
@@ -332,8 +338,16 @@ class RAGSystem:
         
         return all_docs[:top_k]
 
-    def create_educational_prompt(self, question: str, context_docs: List[Document], analysis: Dict[str, str]) -> str:
+    def create_educational_prompt(
+        self,
+        question: str,
+        context_docs: List[Document],
+        analysis: Dict[str, str],
+        target_language: str = "en",
+    ) -> str:
         conversation_context = self.get_conversation_context()
+        language_name = self._language_display_name(target_language)
+        language_instruction = f"Please respond only in {language_name}."
         
         if context_docs:
             docs_formatted = "\n\n".join([
@@ -360,7 +374,9 @@ Please provide a structured lesson response:
 
 Keep the language simple and engaging for young learners. 
 Do NOT use emojis, symbols like *, +, =, :, or formatting characters such as markdown.
-Respond only in clean, plain text suitable for text-to-speech systems."""
+Respond only in clean, plain text suitable for text-to-speech systems.
+{language_instruction}
+"""
 
             elif analysis["intent"] == "explore":
                 prompt = f"""You are a friendly teacher helping students explore educational content.
@@ -381,6 +397,7 @@ Give an overview that:
 Keep the language simple and engaging for young learners. 
 Do NOT use emojis, symbols like *, +, =, :, or formatting characters such as markdown.
 Respond only in clean, plain text suitable for text-to-speech systems.
+{language_instruction}
 """
 
             else:
@@ -396,6 +413,7 @@ STUDENT QUESTION: {question}
 Provide a clear, encouraging answer using the educational content. Keep it simple and age-appropriate for 1st/2nd graders.
 Do NOT use emojis, symbols like *, +, =, :, or formatting characters such as markdown.
 Respond only in clean, plain text suitable for text-to-speech systems.
+{language_instruction}
 """
 
         else:
@@ -408,6 +426,7 @@ STUDENT QUESTION: {question}
 Provide a helpful, age-appropriate response using your general knowledge. Be encouraging and suggest how they might learn more about this topic.
 Do NOT use emojis, symbols like *, +, =, :, or formatting characters such as markdown.
 Respond only in clean, plain text suitable for text-to-speech systems.
+{language_instruction}
 """
 
         return prompt
@@ -471,7 +490,7 @@ Respond only in clean, plain text suitable for text-to-speech systems.
         
         return "[CLEAR] Cache cleared. All documents, indexes, and conversation history removed."
 
-    def query(self, question: str, top_k: int = 5) -> str:
+    def query(self, question: str, top_k: int = 5, target_language: str = "en") -> str:
         if not question:
             return "Please type a question."
         
@@ -493,11 +512,21 @@ Respond only in clean, plain text suitable for text-to-speech systems.
         else:
             self.current_subject = analysis["subject"]
         
+        normalized_language = (target_language or "en").lower()
+        if normalized_language not in {"en", "ta"}:
+            normalized_language = "en"
+        language_name = self._language_display_name(normalized_language)
+
         use_rag = self.should_use_rag(question)
         
         if use_rag:
             context_docs = self.get_relevant_context(question, analysis["subject"], top_k)
-            prompt = self.create_educational_prompt(question, context_docs, analysis)
+            prompt = self.create_educational_prompt(
+                question,
+                context_docs,
+                analysis,
+                target_language=normalized_language,
+            )
         else:
             conversation_context = self.get_conversation_context()
             prompt = f"""You are a friendly, patient teacher for 1st and 2nd grade students.
@@ -509,6 +538,7 @@ STUDENT QUESTION: {question}
 Provide an encouraging, age-appropriate response. Use simple language and make learning fun! 
 Do NOT use emojis, symbols like *, +, =, :, or formatting characters such as markdown.
 Respond only in clean, plain text suitable for text-to-speech systems.
+Please respond only in {language_name}.
 """
         
         if not self.llm:
@@ -528,7 +558,7 @@ Respond only in clean, plain text suitable for text-to-speech systems.
                         print("[INFO] Attempting to reload embeddings...")
                         if self.retry_embeddings_loading():
                             # Recursive call with embeddings now available
-                            return self.query(question, top_k)
+                            return self.query(question, top_k, target_language=normalized_language)
                     
                     answer = "I'm running in offline mode right now. I can help with simple math problems like '5 + 3' or general conversations, but I can't access educational documents. Check your internet connection and try restarting the application."
                 else:

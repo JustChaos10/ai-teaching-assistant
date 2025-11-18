@@ -11,6 +11,8 @@ import subprocess
 import sys
 from config import MURF_API_KEY, LECTURE_API_BASE, OUTPUT_DIR
 
+SUPPORTED_STT_LANGUAGES = {"auto", "en", "ta"}
+
 # ---------------- CONFIG ----------------
 OUTPUT_DIR.mkdir(exist_ok=True)
 
@@ -37,23 +39,31 @@ async def home():
 
 # ------------------- Q&A MODE (AUDIO INPUT) -------------------
 @app.post("/ask")
-async def ask(file: UploadFile):
+async def ask(file: UploadFile, language: str = "auto"):
     """
-    Accepts a WAV file, transcribes the question,
-    generates an AI response, converts to TTS, and returns
-    phoneme animation + audio for the avatar.
+    Accepts a WAV file, transcribes the question (Tamil, English or auto-detect),
+    generates an AI response, converts to TTS, and returns phoneme animation + audio for the avatar.
+    Optional query parameter `language` can be `auto`, `en`, or `ta`.
     """
+    language_normalized = (language or "").strip().lower()
+    if language_normalized not in SUPPORTED_STT_LANGUAGES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported language '{language}'. Choose from {sorted(SUPPORTED_STT_LANGUAGES)}."
+        )
+
     try:
         input_audio = OUTPUT_DIR / f"{uuid.uuid4()}.wav"
         with open(input_audio, "wb") as f:
             shutil.copyfileobj(file.file, f)
 
-        result = chatbot.pipeline(str(input_audio))
+        result = chatbot.pipeline(str(input_audio), language_hint=language_normalized)
 
         return JSONResponse({
             "mode": "qa",
             "question": result["question"],
             "answer": result["answer"],
+            "language": result.get("language", "en"),
             "audio_url": f"/audio/{Path(result['audio_url']).name}",
             "phonemes": result["phonemes"],
             "emotion": result["emotion"]
@@ -131,11 +141,12 @@ async def speak(request: Request):
             raise HTTPException(status_code=400, detail="Missing 'text' field")
 
         tts_file = chatbot.tts(text)
+        phonemes = []
         phonemes_file = chatbot.generate_lipsync(tts_file)
-
-        import json
-        with open(phonemes_file, "r") as f:
-            phonemes = json.load(f)
+        if phonemes_file:
+            import json
+            with open(phonemes_file, "r") as f:
+                phonemes = json.load(f)
 
         return JSONResponse({
             "mode": "speak",
