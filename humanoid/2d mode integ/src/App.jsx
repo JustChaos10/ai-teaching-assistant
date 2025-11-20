@@ -5,9 +5,8 @@ import { Avatar } from './components/Avatar';
 export default function App() {
   const [mode, setMode] = useState("qa"); // "qa" | "lecture" | "games"
 
-  // shared state to drive Avatar (kept for future Live2D lip-sync)
+  // shared state to drive Avatar
   const [audioUrl, setAudioUrl] = useState(null);
-  const [phonemes, setPhonemes] = useState(null);
 
   // ---- Q&A (record) ----
   const [recording, setRecording] = useState(false);
@@ -17,7 +16,6 @@ export default function App() {
 
   const startRecording = async () => {
     setAudioUrl(null);
-    setPhonemes(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
@@ -41,9 +39,8 @@ export default function App() {
           });
           const data = await res.json();
 
-          if (data.audio_url && data.phonemes) {
+          if (data.audio_url) {
             setAudioUrl(`${API_BASE}${data.audio_url}`);
-            setPhonemes(data.phonemes);
           } else {
             console.error("Invalid backend response:", data);
             alert("Sorry, I couldn't process that. " + (data.error || ""));
@@ -118,7 +115,6 @@ export default function App() {
       const data = await r.json();
       if (data.error) return alert(data.error);
       setAudioUrl(`${API_BASE}${data.audio_url}`);
-      setPhonemes(data.phonemes);
     } finally {
       setProcessing(false);
     }
@@ -171,7 +167,7 @@ export default function App() {
                   {recording ? "Stop Recording" : "Start Recording"}
                 </button>
                 <div className="row">
-                  <button className="btn ghost" onClick={() => { setAudioUrl(null); setPhonemes(null); }}>Reset</button>
+                  <button className="btn ghost" onClick={() => { setAudioUrl(null); }}>Reset</button>
                 </div>
               </div>
             </div>
@@ -180,7 +176,6 @@ export default function App() {
               <h3>Now Playing</h3>
               <div className="stack" style={{ fontSize: 13, color: "var(--muted)" }}>
                 <div>Audio: {audioUrl ? "yes" : "—"}</div>
-                <div>Phonemes: {phonemes ? "yes" : "—"}</div>
               </div>
             </div>
           </div>
@@ -240,7 +235,7 @@ export default function App() {
                 <div style={{ whiteSpace: "pre-wrap" }}>{summary}</div>
                 <div className="row" style={{ marginTop: 10 }}>
                   <button className="btn ok" onClick={speakSummary}>Speak Summary</button>
-                  <button className="btn ghost" onClick={() => { setSummary(""); setAudioUrl(null); setPhonemes(null); }}>Reset</button>
+                  <button className="btn ghost" onClick={() => { setSummary(""); setAudioUrl(null); }}>Reset</button>
                 </div>
               </div>
             )}
@@ -271,7 +266,7 @@ export default function App() {
 
       {/* ---- Avatar Area (Live2D Canvas) ---- */}
       <main className="canvasWrap" style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0b1020' }}>
-        <Avatar audioUrl={audioUrl} phonemes={phonemes} />
+        <Avatar audioUrl={audioUrl} />
         
         {/* Processing Overlay */}
         {processing && (

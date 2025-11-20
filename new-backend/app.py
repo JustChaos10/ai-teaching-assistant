@@ -42,7 +42,7 @@ async def home():
 async def ask(file: UploadFile, language: str = "auto"):
     """
     Accepts a WAV file, transcribes the question (Tamil, English or auto-detect),
-    generates an AI response, converts to TTS, and returns phoneme animation + audio for the avatar.
+    generates an AI response, converts to TTS, and returns audio for the avatar.
     Optional query parameter `language` can be `auto`, `en`, or `ta`.
     """
     language_normalized = (language or "").strip().lower()
@@ -65,7 +65,6 @@ async def ask(file: UploadFile, language: str = "auto"):
             "answer": result["answer"],
             "language": result.get("language", "en"),
             "audio_url": f"/audio/{Path(result['audio_url']).name}",
-            "phonemes": result["phonemes"],
             "emotion": result["emotion"]
         })
 
@@ -132,7 +131,7 @@ async def generate_quiz(request: Request):
 async def speak(request: Request):
     """
     Converts provided text (e.g., lecture summary or answer)
-    to speech and returns audio URL + phoneme animation data.
+    to speech and returns audio URL.
     """
     try:
         data = await request.json()
@@ -141,18 +140,11 @@ async def speak(request: Request):
             raise HTTPException(status_code=400, detail="Missing 'text' field")
 
         tts_file = chatbot.tts(text)
-        phonemes = []
-        phonemes_file = chatbot.generate_lipsync(tts_file)
-        if phonemes_file:
-            import json
-            with open(phonemes_file, "r") as f:
-                phonemes = json.load(f)
 
         return JSONResponse({
             "mode": "speak",
             "text": text,
             "audio_url": f"/audio/{Path(tts_file).name}",
-            "phonemes": phonemes,
             "emotion": "neutral"
         })
 

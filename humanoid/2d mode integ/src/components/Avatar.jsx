@@ -1,7 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { modelConfig, getModelPath, getModelSettings } from '../modelConfig';
+import { CubismFramework as CubismFrameworkLib, Option } from '../vendor/Framework/live2dcubismframework.js';
+import { CubismMatrix44 } from '../vendor/Framework/math/cubismmatrix44.js';
+import { CubismModelSettingJson } from '../vendor/Framework/cubismmodelsettingjson.js';
+import { CubismUserModel } from '../vendor/Framework/model/cubismusermodel.js';
+import { CubismPose } from '../vendor/Framework/effect/cubismpose.js';
+import { CubismBreath, BreathParameterData } from '../vendor/Framework/effect/cubismbreath.js';
+import { csmVector } from '../vendor/Framework/type/csmvector.js';
+import { CubismPhysics } from '../vendor/Framework/physics/cubismphysics.js';
+import { CubismMotion } from '../vendor/Framework/motion/cubismmotion.js';
+import { CubismMotionManager } from '../vendor/Framework/motion/cubismmotionmanager.js';
 
-export function Avatar({ audioUrl, phonemes = [] }) {
+export function Avatar({ audioUrl }) {
   const canvasRef = useRef(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(null);
@@ -12,8 +22,10 @@ export function Avatar({ audioUrl, phonemes = [] }) {
   const analyserRef = useRef(null);
   const lipSyncValueRef = useRef(0);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const currentMotionRef = useRef(null);
+  const motionsRef = useRef(new Map());
   const motionManagerRef = useRef(null);
+  const eyeBlinkIdsRef = useRef([]);
+  const lipSyncIdsRef = useRef([]);
 
   useEffect(() => {
     console.log('Avatar mounted, canvas:', canvasRef.current);
@@ -63,18 +75,8 @@ export function Avatar({ audioUrl, phonemes = [] }) {
         
         console.log('Live2DCubismCore available');
         
-        // Load Cubism Framework modules
-        const { CubismFramework: Framework, Option } = await import('../vendor/Framework/live2dcubismframework.js');
-        const { CubismMatrix44 } = await import('../vendor/Framework/math/cubismmatrix44.js');
-        const { CubismModelSettingJson } = await import('../vendor/Framework/cubismmodelsettingjson.js');
-        const { CubismUserModel } = await import('../vendor/Framework/model/cubismusermodel.js');
-        const { CubismRenderer_WebGL } = await import('../vendor/Framework/rendering/cubismrenderer_webgl.js');
-        const { CubismPose } = await import('../vendor/Framework/effect/cubismpose.js');
-        const { CubismBreath } = await import('../vendor/Framework/effect/cubismbreath.js');
-        const { BreathParameterData } = await import('../vendor/Framework/effect/cubismbreath.js');
-        const { csmVector } = await import('../vendor/Framework/type/csmvector.js');
-        const { CubismIdHandle } = await import('../vendor/Framework/id/cubismid.js');
-        
+        // Use statically imported Cubism Framework modules
+        const Framework = CubismFrameworkLib;
         CubismFramework = Framework;
         console.log('Framework modules loaded');
         
@@ -202,7 +204,6 @@ export function Avatar({ audioUrl, phonemes = [] }) {
         // Load physics if available
         let physics = null;
         if (setting.getPhysicsFileName() != '') {
-          const { CubismPhysics } = await import('../vendor/Framework/physics/cubismphysics.js');
           const physicsResponse = await fetch(`${modelConfig.basePath}/${modelName}/${setting.getPhysicsFileName()}`);
           const physicsBuffer = await physicsResponse.arrayBuffer();
           physics = CubismPhysics.create(physicsBuffer, physicsBuffer.byteLength);
@@ -217,6 +218,86 @@ export function Avatar({ audioUrl, phonemes = [] }) {
           pose = CubismPose.create(poseBuffer, poseBuffer.byteLength);
           console.log('Pose loaded');
         }
+        
+        // Load motions and setup motion manager
+        const motionManager = new CubismMotionManager();
+        motionManagerRef.current = motionManager;
+        
+        // Setup eye blink and lip sync IDs
+        const eyeBlinkIds = new csmVector();
+        const lipSyncIds = new csmVector();
+        
+        // Get eye blink parameter IDs
+        const eyeBlinkCount = setting.getEyeBlinkParameterCount();
+        for (let i = 0; i < eyeBlinkCount; i++) {
+          const paramId = setting.getEyeBlinkParameterId(i);
+          if (paramId) {
+            eyeBlinkIds.pushBack(paramId);
+          }
+        }
+        
+        // Get lip sync parameter IDs
+        const lipSyncCount = setting.getLipSyncParameterCount();
+        for (let i = 0; i < lipSyncCount; i++) {
+          const paramId = setting.getLipSyncParameterId(i);
+          if (paramId) {
+            lipSyncIds.pushBack(paramId);
+          }
+        }
+        
+        eyeBlinkIdsRef.current = eyeBlinkIds;
+        lipSyncIdsRef.current = lipSyncIds;
+        
+        console.log(`Eye blink IDs: ${eyeBlinkCount}, Lip sync IDs: ${lipSyncCount}`);
+        
+        // Preload all motions from all groups
+        const motions = new Map();
+        
+        if (setting.isExistMotionGroups()) {
+          const groupCount = setting.getMotionGroupCount();
+          console.log(`Motion groups: ${groupCount}`);
+          
+          for (let groupIdx = 0; groupIdx < groupCount; groupIdx++) {
+            const groupName = setting.getMotionGroupName(groupIdx);
+            const motionCount = setting.getMotionCount(groupName);
+            
+            console.log(`Loading motion group "${groupName}" with ${motionCount} motions`);
+            
+            for (let i = 0; i < motionCount; i++) {
+              try {
+                const motionFileName = setting.getMotionFileName(groupName, i);
+                const motionPath = `${modelConfig.basePath}/${modelName}/${motionFileName}`;
+                
+                const motionResponse = await fetch(motionPath);
+                const motionBuffer = await motionResponse.arrayBuffer();
+                const motion = CubismMotion.create(motionBuffer, motionBuffer.byteLength);
+                
+                // Set fade times from model settings or use defaults
+                const fadeInTime = setting.getMotionFadeInTimeValue(groupName, i);
+                const fadeOutTime = setting.getMotionFadeOutTimeValue(groupName, i);
+                
+                motion.setFadeInTime(fadeInTime >= 0 ? fadeInTime : 1.0);
+                motion.setFadeOutTime(fadeOutTime >= 0 ? fadeOutTime : 1.0);
+                
+                // Set effect IDs for eye blink and lip sync
+                motion.setEffectIds(eyeBlinkIds, lipSyncIds);
+                
+                // Store motion with key: "GroupName_index"
+                const motionKey = `${groupName}_${i}`;
+                motions.set(motionKey, motion);
+                
+                console.log(`Loaded motion: ${motionKey} (fadeIn: ${motion.getFadeInTime()}s, fadeOut: ${motion.getFadeOutTime()}s)`);
+              } catch (e) {
+                console.warn(`Failed to load motion ${groupName}_${i}:`, e);
+              }
+            }
+          }
+        } else {
+          console.log('No motion groups defined in model settings');
+        }
+        
+        console.log(`Total motions loaded: ${motions.size}`);
+        motionsRef.current = motions;
         
         // Initialize model parameters to default values
         model.saveParameters();
@@ -252,12 +333,28 @@ export function Avatar({ audioUrl, phonemes = [] }) {
         
         renderer.setMvpMatrix(projection);
         
-        // Get the mouth parameter ID using the ID manager
-        const mouthParamId = CubismFramework.getIdManager().getId('ParamMouthOpenY');
-        console.log('Mouth parameter ID created:', mouthParamId);
+        // Get the mouth parameter ID from lip sync settings (supports all models)
+        let mouthParamId = null;
+        if (lipSyncIds.getSize() > 0) {
+          // Use the first lip sync parameter (usually the mouth)
+          mouthParamId = lipSyncIds.at(0);
+          console.log('Using lip sync parameter from model settings:', mouthParamId);
+        } else {
+          // Fallback to common parameter names
+          console.warn('No lip sync parameters found in model settings, trying fallbacks');
+          try {
+            mouthParamId = CubismFramework.getIdManager().getId('ParamMouthOpenY');
+          } catch (e) {
+            try {
+              mouthParamId = CubismFramework.getIdManager().getId('PARAM_MOUTH_OPEN_Y');
+            } catch (e2) {
+              console.error('Could not find mouth parameter');
+            }
+          }
+        }
+        console.log('Mouth parameter ID:', mouthParamId);
         
-        modelRef.current = { gl, userModel, model, renderer, projection, CubismFramework, breath, pose, physics, mouthParamId };
-        setIsLoaded(true);
+        modelRef.current = { gl, userModel, model, renderer, projection, CubismFramework, breath, pose, physics, mouthParamId, motionManager, setting };
         setIsLoaded(true);
         setError(null);
         console.log('Live2D model fully loaded!');
@@ -271,10 +368,42 @@ export function Avatar({ audioUrl, phonemes = [] }) {
       }
     };
     
+    const startRandomIdleMotion = () => {
+      if (!modelRef.current) return;
+      
+      const { setting } = modelRef.current;
+      const motionManager = motionManagerRef.current;
+      const motions = motionsRef.current;
+      
+      if (!motionManager || !setting || motions.size === 0) {
+        return;
+      }
+      
+      // Get idle motion count
+      const idleCount = setting.getMotionCount('Idle');
+      if (idleCount === 0) {
+        return;
+      }
+      
+      // Pick random idle motion
+      const randomIndex = Math.floor(Math.random() * idleCount);
+      const motionKey = `Idle_${randomIndex}`;
+      const motion = motions.get(motionKey);
+      
+      if (!motion) {
+        console.warn(`Motion ${motionKey} not found`);
+        return;
+      }
+      
+      console.log(`Starting random idle motion: ${motionKey}`);
+      motionManager.startMotionPriority(motion, false, 1);
+    };
+    
     const startAnimation = () => {
       let frameCount = 0;
       let lastTime = performance.now();
       let totalTime = 0;
+      let currentMotionTime = 0;
       
       const animate = () => {
         if (!modelRef.current) return;
@@ -336,6 +465,21 @@ export function Avatar({ audioUrl, phonemes = [] }) {
         // Load saved parameters
         model.loadParameters();
         
+        // Update motions through motion manager - MIMIC TYPESCRIPT SAMPLE
+        if (motionManagerRef.current) {
+          // Check if motion is finished, if so start a random idle motion
+          if (motionManagerRef.current.isFinished()) {
+            // Start random idle motion (priority 1 = idle priority)
+            startRandomIdleMotion();
+          } else {
+            // Update current motion
+            motionManagerRef.current.updateMotion(model, deltaTime);
+          }
+        }
+        
+        // Save parameters state
+        model.saveParameters();
+        
         // Apply physics
         if (physics) {
           physics.evaluate(model, deltaTime);
@@ -359,9 +503,6 @@ export function Avatar({ audioUrl, phonemes = [] }) {
             console.log('Setting mouth to:', lipSyncValueRef.current);
           }
         }
-        
-        // Save parameters state
-        model.saveParameters();
         
         // Update model (required before drawing)
         model.update();
@@ -415,7 +556,7 @@ export function Avatar({ audioUrl, phonemes = [] }) {
   }, []);
 
   useEffect(() => {
-    console.log('Audio/phonemes changed:', { audioUrl, phonemes });
+    console.log('Audio changed:', { audioUrl });
     
     // Play audio when audioUrl is provided
     if (audioUrl) {

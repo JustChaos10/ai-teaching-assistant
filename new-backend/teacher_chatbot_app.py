@@ -8,7 +8,7 @@ from faster_whisper import WhisperModel
 from pathlib import Path
 from rag_system import RAGSystem
 from teacher_chatbot import auto_ingest_docs, clean_text
-from config import RHUBARB_PATH, OUTPUT_DIR, MURF_VOICE_EN, MURF_VOICE_TA
+from config import OUTPUT_DIR, MURF_VOICE_EN, MURF_VOICE_TA
 
 
 pygame.mixer.init()
@@ -57,10 +57,8 @@ class TeacherChatbot:
     # ---------------- Chatbot (RAG query) ----------------
     def query_chatbot(self, question, target_language="en"):
         question_cleaned = clean_text(question)
-        try:
-            answer = self.rag.query(question_cleaned, target_language=target_language)
-        except Exception as e:
-            answer = f"Sorry, I couldn't answer that. ({e})"
+        # Let RAG system handle errors internally - it has better error messages
+        answer = self.rag.query(question_cleaned, target_language=target_language)
         emotion = "neutral"
         return answer, emotion
 
@@ -78,26 +76,7 @@ class TeacherChatbot:
             
         return local_file
 
-    # ---------------- Rhubarb Lip Sync ----------------
-    def generate_lipsync(self, audio_file):
-        if not RHUBARB_PATH.exists():
-            warning_msg = (
-                f"Rhubarb executable not found at {RHUBARB_PATH}. "
-                "Please download Rhubarb from https://github.com/DanielSWolf/rhubarb-lip-sync/releases "
-                "and place it at the specified path, or update RHUBARB_PATH in config.py."
-            )
-            print(f"[WARNING] {warning_msg}")
-            return None
 
-        json_file = OUTPUT_DIR / f"{uuid.uuid4()}.json"
-        cmd = [
-            str(RHUBARB_PATH),   # Path to rhubarb.exe
-            "-f", "json",        # Output format: json
-            str(audio_file),     # Input audio file
-            "-o", str(json_file)  # Output JSON file
-        ]
-        subprocess.run(cmd, check=True)
-        return json_file
 
     # ---------------- Full pipeline ----------------
     def pipeline(self, audio_path, language_hint=None):
@@ -105,18 +84,11 @@ class TeacherChatbot:
         answer_language = detected_language or "en"
         answer, emotion = self.query_chatbot(question, target_language=answer_language)
         tts_file = self.tts(answer, target_language=answer_language)
-        phonemes = []
-        phonemes_file = self.generate_lipsync(tts_file)
-        if phonemes_file:
-            import json
-            with open(phonemes_file, "r") as f:
-                phonemes = json.load(f)
 
         return {
             "question": question,
             "answer": answer,
             "language": answer_language,
             "audio_url": str(tts_file),
-            "phonemes": phonemes,
             "emotion": emotion
         }

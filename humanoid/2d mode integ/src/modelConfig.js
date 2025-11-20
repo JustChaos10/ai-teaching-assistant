@@ -2,12 +2,12 @@
  * Live2D Model Configuration
  * 
  * Change the modelName to switch between different characters.
- * Available models: 'Haru', 'Hiyori', 'Mao', 'Mark', 'Natori', 'Rice', 'Wanko'
+ * Available models: 'Haru', 'Hiyori', 'Mao', 'Mark', 'Natori', 'Rice', 'Wanko', 'chitose'
  */
 
 export const modelConfig = {
   // Current model to display
-  modelName: 'Hiyori',
+  modelName: 'Haru',
   
   // Base path for all models (relative to public folder)
   basePath: '/Resources',
@@ -39,6 +39,10 @@ export const modelConfig = {
       position: { x: 0.0, y: 0.0 }
     },
     Wanko: {
+      scale: 1.2,
+      position: { x: 0.0, y: 0.0 }
+    },
+    chitose: {
       scale: 1.2,
       position: { x: 0.0, y: 0.0 }
     }
