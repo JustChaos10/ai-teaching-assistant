@@ -1,4 +1,5 @@
 import cv2
+import os
 import random
 from .base_game import BaseGame
 from detector import ColorDetector
@@ -13,7 +14,28 @@ class BinaryChoiceGame(BaseGame):
 
     def load_game_assets(self):
         for item in self.items:
-            item['image_obj'] = cv2.imread(item['image_path'])
+            # Handle both absolute and relative paths
+            image_path = item['image_path']
+            
+            # Check if it's an old-style path that includes "created_games"
+            if 'created_games' in image_path and not os.path.isabs(image_path):
+                # Extract just the filename from old-style relative paths
+                image_path = os.path.basename(image_path)
+            
+            # If still not absolute, join with game directory
+            if not os.path.isabs(image_path):
+                image_path = os.path.join(self.game_directory, image_path)
+            
+            # Check if image exists
+            if not os.path.exists(image_path):
+                raise FileNotFoundError(f"Image not found: {image_path}")
+            
+            # Load the image
+            img = cv2.imread(image_path)
+            if img is None:
+                raise ValueError(f"Failed to load image: {image_path}")
+            
+            item['image_obj'] = img
 
     def prepare_new_round(self):
         super().prepare_new_round()

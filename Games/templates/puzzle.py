@@ -1,4 +1,5 @@
 import cv2
+import os
 import random
 import numpy as np
 import pygame
@@ -31,7 +32,19 @@ class Button:
 class PuzzleGame(BaseGame):
     def __init__(self, game_data, game_directory, app_stop_event=None):
         super().__init__(game_data, game_directory, app_stop_event, window_name=game_data.get('title', 'Puzzle Game'), has_camera=False, scale_factor=0.75, width_to_height_ratio=1.5)
-        self.image_path = game_data.get('image_path')
+        # Handle both absolute and relative paths
+        image_path = game_data.get('image_path')
+        
+        # Check if it's an old-style path that includes "created_games"
+        if 'created_games' in image_path and not os.path.isabs(image_path):
+            # Extract just the filename from old-style relative paths
+            image_path = os.path.basename(image_path)
+        
+        # If still not absolute, join with game directory
+        if not os.path.isabs(image_path):
+            image_path = os.path.join(game_directory, image_path)
+            
+        self.image_path = image_path
         self.rows = game_data.get('rows', 4)
         self.strips = []
         self.order = []

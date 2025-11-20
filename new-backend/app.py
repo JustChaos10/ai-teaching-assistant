@@ -214,3 +214,57 @@ async def launch_games():
         print(f"[ERROR] {error_detail}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@app.post("/create-games")
+async def create_games():
+    """
+    Launches the Games/create_game.py script which opens the game creator GUI.
+    """
+    import traceback
+    try:
+        # Get the path to the Games directory
+        games_dir = Path(__file__).parent.parent / "Games"
+        create_game_py = games_dir / "create_game.py"
+
+        print(f"[DEBUG] Backend dir: {Path(__file__).parent}")
+        print(f"[DEBUG] Games dir: {games_dir}")
+        print(f"[DEBUG] create_game.py path: {create_game_py}")
+        print(f"[DEBUG] create_game.py exists: {create_game_py.exists()}")
+        print(f"[DEBUG] Python executable: {sys.executable}")
+
+        if not create_game_py.exists():
+            error_msg = f"Game creator not found at {create_game_py}"
+            print(f"[ERROR] {error_msg}")
+            raise HTTPException(status_code=404, detail=error_msg)
+
+        # Launch the game creator in a new process.
+        print(f"[DEBUG] Launching game creator subprocess...")
+        if os.name == "nt":
+            # Windows: Launch without console window (GUI only)
+            process = subprocess.Popen(
+                [sys.executable, str(create_game_py)],
+                cwd=str(games_dir),
+                creationflags=subprocess.CREATE_NO_WINDOW,
+            )
+            print(f"[DEBUG] Game creator launched with PID: {process.pid}")
+        else:
+            # POSIX: Detach from parent process
+            process = subprocess.Popen(
+                [sys.executable, str(create_game_py)],
+                cwd=str(games_dir),
+                start_new_session=True,
+            )
+            print(f"[DEBUG] Game creator launched with PID: {process.pid}")
+
+        return JSONResponse({
+            "status": "success",
+            "message": "Game creator started successfully"
+        })
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_detail = f"Error launching game creator: {str(e)}\n{traceback.format_exc()}"
+        print(f"[ERROR] {error_detail}")
+        raise HTTPException(status_code=500, detail=str(e))
+

@@ -3,32 +3,32 @@
     "template": "Binary Choice",
     "items": [
         {
-            "image_path": "created_games\\Healthy VS Junk\\apple.jpg",
+            "image_path": "apple.jpg",
             "question": "What is this?",
             "answer": "yes"
         },
         {
-            "image_path": "created_games\\Healthy VS Junk\\broccoli.jpg",
+            "image_path": "broccoli.jpg",
             "question": "What is this?",
             "answer": "yes"
         },
         {
-            "image_path": "created_games\\Healthy VS Junk\\burger.jpg",
+            "image_path": "burger.jpg",
             "question": "What is this?",
             "answer": "no"
         },
         {
-            "image_path": "created_games\\Healthy VS Junk\\carrot.jpg",
+            "image_path": "carrot.jpg",
             "question": "What is this?",
             "answer": "yes"
         },
         {
-            "image_path": "created_games\\Healthy VS Junk\\donut.jpg",
+            "image_path": "donut.jpg",
             "question": "What is this?",
             "answer": "no"
         },
         {
-            "image_path": "created_games\\Healthy VS Junk\\pizza.jpg",
+            "image_path": "pizza.jpg",
             "question": "What is this?",
             "answer": "no"
         }

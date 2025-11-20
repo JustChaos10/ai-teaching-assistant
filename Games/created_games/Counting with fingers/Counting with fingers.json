@@ -3,27 +3,27 @@
     "template": "Numeric Input",
     "items": [
         {
-            "image_path": "created_games\\Counting with fingers\\five.jpg",
+            "image_path": "five.jpg",
             "question": "What is this?",
             "answer": 5
         },
         {
-            "image_path": "created_games\\Counting with fingers\\four.jpg",
+            "image_path": "four.jpg",
             "question": "What is this?",
             "answer": 4
         },
         {
-            "image_path": "created_games\\Counting with fingers\\one.jpg",
+            "image_path": "one.jpg",
             "question": "What is this?",
             "answer": 1
         },
         {
-            "image_path": "created_games\\Counting with fingers\\three.jpg",
+            "image_path": "three.jpg",
             "question": "What is this?",
             "answer": 3
         },
         {
-            "image_path": "created_games\\Counting with fingers\\two.jpg",
+            "image_path": "two.jpg",
             "question": "What is this?",
             "answer": 2
         }

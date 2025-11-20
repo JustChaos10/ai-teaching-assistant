@@ -136,6 +136,17 @@ export default function App() {
     }
   }
 
+  async function launchGameCreator() {
+    try {
+      const r = await fetch(`${API_BASE}/create-games`, { method: "POST" });
+      const data = await r.json();
+      if (data.error) return alert(data.error);
+      alert("Game Creator opened! Check your desktop for the creator window.");
+    } catch (e) {
+      alert("Failed to launch game creator: " + e.message);
+    }
+  }
+
   return (
     <div className="app" style={{ background: '#0b1020', color: '#e9eef7' }}> {/* Force dark bg/light text */}
       {/* ---- Sidebar ---- */}
@@ -183,9 +194,16 @@ export default function App() {
               <button 
                 className="btn primary" 
                 onClick={launchGames} 
-                style={{ width: "100%", padding: "16px", fontSize: "18px" }}
+                style={{ width: "100%", padding: "16px", fontSize: "18px", marginBottom: "12px" }}
               >
                 🎲 Launch Games
+              </button>
+              <button 
+                className="btn ok" 
+                onClick={launchGameCreator} 
+                style={{ width: "100%", padding: "16px", fontSize: "18px" }}
+              >
+                🎨 Create Games
               </button>
             </div>
 
