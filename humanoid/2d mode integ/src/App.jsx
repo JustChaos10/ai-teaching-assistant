@@ -7,6 +7,8 @@ export default function App() {
 
   // shared state to drive Avatar
   const [audioUrl, setAudioUrl] = useState(null);
+  const [images, setImages] = useState([]); // Generated educational images
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // ---- Q&A (record) ----
   const [recording, setRecording] = useState(false);
@@ -16,6 +18,8 @@ export default function App() {
 
   const startRecording = async () => {
     setAudioUrl(null);
+    setImages([]); // Clear previous images
+    setCurrentImageIndex(0);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
@@ -41,6 +45,16 @@ export default function App() {
 
           if (data.audio_url) {
             setAudioUrl(`${API_BASE}${data.audio_url}`);
+            
+            // Handle images if returned
+            if (data.images && data.images.length > 0) {
+              console.log(`Received ${data.images.length} images from backend`);
+              setImages(data.images);
+              setCurrentImageIndex(0);
+              
+              // Start dynamic timed image display
+              startImageSlideshow(data.images);
+            }
           } else {
             console.error("Invalid backend response:", data);
             alert("Sorry, I couldn't process that. " + (data.error || ""));
@@ -67,6 +81,42 @@ export default function App() {
       setRecording(false);
     }
   };
+
+  // Image slideshow management with LLM-calculated timing
+  const slideshowTimerRef = useRef(null);
+  const imageTimersRef = useRef([]);
+  
+  const startImageSlideshow = (imagesData) => {
+    // Clear existing timers
+    if (slideshowTimerRef.current) {
+      clearInterval(slideshowTimerRef.current);
+    }
+    imageTimersRef.current.forEach(timer => clearTimeout(timer));
+    imageTimersRef.current = [];
+    
+    // Set up timed image display based on LLM-calculated start_time and duration
+    imagesData.forEach((img, index) => {
+      const startTime = img.start_time || 0;
+      const duration = img.duration || 3;
+      
+      // Show image at start_time
+      const showTimer = setTimeout(() => {
+        console.log(`[${startTime}s] Showing image ${index + 1}: ${img.description} (for ${duration}s)`);
+        setCurrentImageIndex(index);
+      }, startTime * 1000);
+      
+      imageTimersRef.current.push(showTimer);
+    });
+  };
+  
+  useEffect(() => {
+    return () => {
+      if (slideshowTimerRef.current) {
+        clearInterval(slideshowTimerRef.current);
+      }
+      imageTimersRef.current.forEach(timer => clearTimeout(timer));
+    };
+  }, []);
 
 
   // ---- Lectures ----
@@ -265,8 +315,79 @@ export default function App() {
       </aside>
 
       {/* ---- Avatar Area (Live2D Canvas) ---- */}
-      <main className="canvasWrap" style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0b1020' }}>
+      <main className="canvasWrap" style={{ 
+        position: 'relative', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        backgroundImage: 'url(/blackboard.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}>
         <Avatar audioUrl={audioUrl} />
+        
+        {/* Educational Images Display */}
+        {images.length > 0 && (
+          <div style={{
+            position: 'absolute',
+            top: '20px',
+            right: '20px',
+            width: '400px',
+            background: 'rgba(255, 255, 255, 0.95)',
+            borderRadius: '12px',
+            padding: '20px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+            zIndex: 100
+          }}>
+            <img 
+              src={`${API_BASE}${images[currentImageIndex].url}`}
+              alt={images[currentImageIndex].description}
+              style={{
+                width: '100%',
+                height: 'auto',
+                borderRadius: '8px',
+                marginBottom: '12px'
+              }}
+            />
+            <div style={{
+              textAlign: 'center',
+              fontSize: '16px',
+              fontWeight: '600',
+              color: '#333',
+              marginBottom: '8px'
+            }}>
+              {images[currentImageIndex].description}
+            </div>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '8px',
+              marginTop: '12px'
+            }}>
+              {images.map((_, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '50%',
+                    background: idx === currentImageIndex ? '#4CAF50' : '#ddd',
+                    transition: 'background 0.3s'
+                  }}
+                />
+              ))}
+            </div>
+            <div style={{
+              textAlign: 'center',
+              fontSize: '12px',
+              color: '#666',
+              marginTop: '8px'
+            }}>
+              Step {currentImageIndex + 1} of {images.length}
+            </div>
+          </div>
+        )}
         
         {/* Processing Overlay */}
         {processing && (

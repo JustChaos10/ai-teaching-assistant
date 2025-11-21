@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Handler Example</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    
+    .input-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #555;
+    }
+    
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: vertical;
+    }
+    
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    
+    button:hover {
+      background: #45a049;
+    }
+    
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .examples {
+      margin-top: 30px;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 6px;
+    }
+    
+    .examples h3 {
+      margin-top: 0;
+      color: #333;
+    }
+    
+    .example-item {
+      margin: 10px 0;
+      padding: 10px;
+      background: white;
+      border-left: 4px solid #4CAF50;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .example-item:hover {
+      background: #f0f0f0;
+    }
+    
+    .status {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 6px;
+      display: none;
+    }
+    
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      display: block;
+    }
+    
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+      display: block;
+    }
+    
+    .status.loading {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📚 Educational Image Generator</h1>
+    
+    <div class="input-group">
+      <label for="teaching-text">Enter Teaching Content:</label>
+      <textarea 
+        id="teaching-text" 
+        rows="4" 
+        placeholder="Example: 2 apples and 3 apples make 5 apples"
+      ></textarea>
+    </div>
+    
+    <button id="generate-btn">Generate Images & Show Slideshow</button>
+    
+    <div id="status" class="status"></div>
+    
+    <div class="examples">
+      <h3>📖 Example Teaching Scenarios:</h3>
+      <div class="example-item" data-text="2 apples and 3 apples make 5 apples">
+        <strong>Math Addition:</strong> "2 apples and 3 apples make 5 apples"
+      </div>
+      <div class="example-item" data-text="Count from 1 to 5 stars">
+        <strong>Counting:</strong> "Count from 1 to 5 stars"
+      </div>
+      <div class="example-item" data-text="If you have 4 books and give away 2 books, you have 2 books left">
+        <strong>Subtraction:</strong> "If you have 4 books and give away 2 books, you have 2 books left"
+      </div>
+      <div class="example-item" data-text="Look at 3 colorful balloons">
+        <strong>Simple Concept:</strong> "Look at 3 colorful balloons"
+      </div>
+    </div>
+  </div>
+
+  <!-- Load image handler modules -->
+  <script src="./text_analyzer.js"></script>
+  <script src="./image_generator.js"></script>
+  <script src="./slideshow_manager.js"></script>
+  <script src="./image_handler.js"></script>
+
+  <script>
+    let imageHandler;
+    
+    // Initialize image handler on page load
+    async function initializeImageHandler() {
+      try {
+        imageHandler = new ImageHandler('./config.json');
+        const initialized = await imageHandler.init();
+        
+        if (initialized) {
+          console.log('Image Handler initialized successfully');
+          showStatus('Ready to generate images!', 'success');
+        } else {
+          showStatus('Failed to initialize. Check console for errors.', 'error');
+        }
+      } catch (error) {
+        console.error('Initialization error:', error);
+        showStatus('Initialization error: ' + error.message, 'error');
+      }
+    }
+    
+    // Generate images and show slideshow
+    async function generateImages() {
+      const text = document.getElementById('teaching-text').value.trim();
+      
+      if (!text) {
+        showStatus('Please enter some teaching content first!', 'error');
+        return;
+      }
+      
+      if (!imageHandler) {
+        showStatus('Image handler not initialized. Please refresh the page.', 'error');
+        return;
+      }
+      
+      try {
+        showStatus('Generating images... This may take a moment.', 'loading');
+        document.getElementById('generate-btn').disabled = true;
+        
+        const result = await imageHandler.processTeachingContent(text, true);
+        
+        if (result.success) {
+          showStatus(`Success! Generated ${result.images.length} images. Slideshow starting...`, 'success');
+        } else {
+          showStatus('Failed to generate images: ' + result.message, 'error');
+        }
+      } catch (error) {
+        console.error('Generation error:', error);
+        showStatus('Error: ' + error.message, 'error');
+      } finally {
+        document.getElementById('generate-btn').disabled = false;
+      }
+    }
+    
+    // Show status message
+    function showStatus(message, type) {
+      const statusDiv = document.getElementById('status');
+      statusDiv.textContent = message;
+      statusDiv.className = 'status ' + type;
+    }
+    
+    // Event listeners
+    document.getElementById('generate-btn').addEventListener('click', generateImages);
+    
+    // Example click handlers
+    document.querySelectorAll('.example-item').forEach(item => {
+      item.addEventListener('click', () => {
+        document.getElementById('teaching-text').value = item.dataset.text;
+      });
+    });
+    
+    // Initialize on page load
+    window.addEventListener('load', initializeImageHandler);
+  </script>
+</body>
+</html>

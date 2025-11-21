@@ -16,7 +16,7 @@ export const modelConfig = {
   models: {
     Haru: {
       scale: 1.2,
-      position: { x: 0.0, y: 0.0 }
+      position: { x: 0.0, y: -0.1 }
     },
     Hiyori: {
       scale: 1.2,
