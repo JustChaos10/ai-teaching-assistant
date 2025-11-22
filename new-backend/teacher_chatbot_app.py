@@ -21,14 +21,25 @@ class TeacherChatbot:
     def __init__(self, murf_api_key, docs_folder="./docs"):
         self.murf_api_key = murf_api_key
         self.stt_model = WhisperModel("small", device="cpu", compute_type="int8")  # Whisper model
-        
+
         # ---------------- RAG SYSTEM ----------------
         self.rag = RAGSystem()
         auto_ingest_docs(self.rag, docs_folder)
+
+        # ---------------- VOICE CONFIGURATION ----------------
         self.voice_map = {
             "en": MURF_VOICE_EN,
             "ta": MURF_VOICE_TA or MURF_VOICE_EN,
         }
+
+        # Validate Tamil voice configuration
+        self.tamil_voice_configured = (MURF_VOICE_TA is not None and MURF_VOICE_TA != MURF_VOICE_EN)
+        if not self.tamil_voice_configured:
+            print("[TeacherChatbot] ⚠️ WARNING: Tamil voice not configured!")
+            print("[TeacherChatbot] Tamil TTS will use English voice (will sound incorrect)")
+        else:
+            print(f"[TeacherChatbot] ✅ Tamil voice configured: {MURF_VOICE_TA}")
+
         OUTPUT_DIR.mkdir(exist_ok=True)
         
         # ---------------- IMAGE GENERATOR ----------------
@@ -84,16 +95,24 @@ class TeacherChatbot:
 
     # ---------------- TTS ----------------
     def tts(self, text, target_language="en"):
+        # Warn if using Tamil with English voice
+        if target_language == "ta" and not self.tamil_voice_configured:
+            print("[TTS] ⚠️ WARNING: Generating Tamil audio with English voice!")
+            print("[TTS] This will sound incorrect. Configure MURF_VOICE_TA in .env file.")
+
         client = Murf(api_key=self.murf_api_key)
         voice_id = self.voice_map.get(target_language, self.voice_map["en"])
+
+        print(f"[TTS] Generating audio: language={target_language}, voice={voice_id}")
+
         response = client.text_to_speech.generate(text=text, voice_id=voice_id)
         audio_url = response.audio_file
-        
+
         local_file = OUTPUT_DIR / f"{uuid.uuid4()}.wav"
         r = requests.get(audio_url)
         with open(local_file, "wb") as f:
             f.write(r.content)
-            
+
         return local_file
 
 

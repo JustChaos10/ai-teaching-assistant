@@ -10,7 +10,15 @@ MURF_API_KEY = os.getenv("MURF_API_KEY", "ap2_5f202fde-8bb8-41c2-a021-81c8757d64
 
 # Murf voices per language (default to English voice; override via env for Tamil)
 MURF_VOICE_EN = os.getenv("MURF_VOICE_EN", "en-US-charles")
-MURF_VOICE_TA = os.getenv("MURF_VOICE_TA", MURF_VOICE_EN)
+MURF_VOICE_TA = os.getenv("MURF_VOICE_TA", None)
+
+# Warn if Tamil voice is not configured
+if not MURF_VOICE_TA:
+    print("[WARNING] MURF_VOICE_TA not set in .env file!")
+    print("[WARNING] Tamil TTS will use English voice - this will sound incorrect!")
+    print("[WARNING] To fix: Set MURF_VOICE_TA=ta-IN-<voice-name> in your .env file")
+    print("[WARNING] Get Tamil voice IDs from: https://murf.ai/resources/voice-catalog")
+    MURF_VOICE_TA = MURF_VOICE_EN  # Fallback to English voice
 
 # API endpoint for the external lecture service
 LECTURE_API_BASE = "http://localhost:5000/api"
