@@ -1,5 +1,5 @@
 """
-Quick test script for Hugging Face FLUX Schnell image generation
+Quick test script for Pollinations.ai image generation
 """
 import os
 from dotenv import load_dotenv
@@ -9,17 +9,16 @@ from pathlib import Path
 load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY", "")
 
 print("=" * 60)
-print("Testing FLUX Schnell Image Generation (Hugging Face)")
+print("Testing Pollinations.ai Image Generation (Free, No Auth)")
 print("=" * 60)
 
 print(f"\n✓ GROQ_API_KEY present: {bool(GROQ_API_KEY)}")
-print(f"✓ HUGGINGFACE_API_KEY present: {bool(HUGGINGFACE_API_KEY)}")
+print("✓ Pollinations.ai: No API key required!")
 
-if not GROQ_API_KEY or not HUGGINGFACE_API_KEY:
-    print("\n❌ Missing API keys! Check your .env file")
+if not GROQ_API_KEY:
+    print("\n❌ Missing GROQ_API_KEY! Check your .env file")
     exit(1)
 
 # Import and test
@@ -32,7 +31,6 @@ print("=" * 60)
 try:
     generator = ImageGenerator(
         groq_api_key=GROQ_API_KEY,
-        huggingface_api_key=HUGGINGFACE_API_KEY,
         output_dir="static/generated_images"
     )
     print("✅ Image generator initialized successfully!")
@@ -65,7 +63,7 @@ except Exception as e:
 
 # Test image generation with first prompt
 print("\n" + "=" * 60)
-print("Testing FLUX Schnell API (Hugging Face)...")
+print("Testing Pollinations.ai Image Generation...")
 print("=" * 60)
 
 if prompts:
@@ -73,13 +71,13 @@ if prompts:
     print(f"\nGenerating image with prompt: {test_prompt[:100]}...")
     
     try:
-        image_path = generator.generate_image_huggingface(test_prompt)
+        image_path = generator.generate_image_pollinations(test_prompt)
         
         if image_path:
             print(f"\n✅ SUCCESS! Image saved to: {image_path}")
             print(f"✅ File exists: {Path(image_path).exists()}")
             print(f"✅ File size: {Path(image_path).stat().st_size} bytes")
-            print("\n🎉 FLUX Schnell (Hugging Face) is working perfectly!")
+            print("\n🎉 Pollinations.ai is working perfectly!")
         else:
             print("\n❌ Image generation returned None")
             

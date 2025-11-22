@@ -1,29 +1,29 @@
 import os
 import time
 import json
+import requests
+import uuid
 from pathlib import Path
 from groq import Groq
-from huggingface_hub import InferenceClient
 
 class ImageGenerator:
     """
     Image generation system that:
     1. Takes RAG output
     2. Uses Groq LLM to analyze and create image prompts with timing
-    3. Generates images via Hugging Face FLUX Schnell model
+    3. Generates images via Pollinations.ai (free, no auth required)
     4. Saves images locally
     5. Returns image URLs with timing information
     """
     
-    def __init__(self, groq_api_key, huggingface_api_key, output_dir="./static/generated_images"):
+    def __init__(self, groq_api_key, output_dir="./static/generated_images"):
         self.groq_client = Groq(api_key=groq_api_key)
-        self.hf_client = InferenceClient(api_key=huggingface_api_key)
         
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
-        print(f"[Image Generator] Initialized with FLUX Schnell (Hugging Face)")
-        print(f"[Image Generator] API Key present: {bool(huggingface_api_key)}")
+        print(f"[Image Generator] Initialized with Pollinations.ai (free, no auth)")
+        print(f"[Image Generator] Groq API Key present: {bool(groq_api_key)}")
         
     def analyze_teaching_content(self, ai_response):
         """
@@ -121,10 +121,9 @@ Return ONLY valid JSON, no other text:"""
             print(f"[Image Generator] Error analyzing content: {e}")
             return []
     
-    def generate_image_huggingface(self, prompt):
+    def generate_image_pollinations(self, prompt):
         """
-        Generate image using FLUX Schnell via Hugging Face Inference API.
-        Fast, high-quality image generation.
+        Generate image using Pollinations.ai (free, no authentication required).
         
         Args:
             prompt (str): Text prompt for image generation
@@ -133,23 +132,41 @@ Return ONLY valid JSON, no other text:"""
             str: Path to saved image or None
         """
         try:
-            print(f"[Image Generator] Calling FLUX Schnell with prompt: {prompt[:50]}...")
+            print(f"[Image Generator] Calling Pollinations.ai with prompt: {prompt[:50]}...")
             
-            # Generate image using Hugging Face
-            image = self.hf_client.text_to_image(
-                prompt=prompt,
-                model="black-forest-labs/FLUX.1-schnell"
-            )
+            # Construct Pollinations.ai URL with timestamp to avoid caching
+            url = f"https://image.pollinations.ai/prompt/{requests.utils.quote(prompt)}?nologo=true&t={int(time.time())}"
             
-            # Save image
-            import uuid
-            filename = f"edu_{uuid.uuid4().hex[:8]}.png"
-            filepath = self.output_dir / filename
+            # Download image with retries
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    response = requests.get(url, timeout=60)
+                    
+                    if response.status_code == 200:
+                        # Save image
+                        filename = f"edu_{uuid.uuid4().hex[:8]}.png"
+                        filepath = self.output_dir / filename
+                        
+                        with open(filepath, "wb") as f:
+                            f.write(response.content)
+                        
+                        print(f"[Image Generator] ✅ Image saved: {filepath}")
+                        return str(filepath)
+                    else:
+                        print(f"[Image Generator] ❌ Server returned status {response.status_code}")
+                        if attempt < max_retries - 1:
+                            print(f"[Image Generator] Retrying ({attempt + 2}/{max_retries})...")
+                            time.sleep(2)
+                        
+                except requests.exceptions.Timeout:
+                    if attempt < max_retries - 1:
+                        print(f"[Image Generator] ⏱️ Timeout, retrying ({attempt + 2}/{max_retries})...")
+                        time.sleep(2)
+                    else:
+                        raise
             
-            image.save(str(filepath))
-            
-            print(f"[Image Generator] ✅ Image saved: {filepath}")
-            return str(filepath)
+            return None
             
         except Exception as e:
             print(f"[Image Generator] ❌ Error: {e}")
@@ -189,7 +206,7 @@ Return ONLY valid JSON, no other text:"""
             print(f"[Image Generator] Image {idx + 1}: '{description}'")
             print(f"[Image Generator]   Time: {start_time:.1f}s → {end_time:.1f}s (duration: {duration:.1f}s)")
             
-            image_path = self.generate_image_huggingface(prompt)
+            image_path = self.generate_image_pollinations(prompt)
             
             if image_path:
                 image_paths.append({

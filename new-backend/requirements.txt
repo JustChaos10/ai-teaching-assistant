@@ -28,4 +28,4 @@ inflect
 gunicorn
 PyQt6
 murf
-huggingface-hub
+requests

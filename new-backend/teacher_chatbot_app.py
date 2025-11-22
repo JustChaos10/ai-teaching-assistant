@@ -8,7 +8,7 @@ from faster_whisper import WhisperModel
 from pathlib import Path
 from rag_system import RAGSystem
 from teacher_chatbot import auto_ingest_docs, clean_text
-from config import OUTPUT_DIR, MURF_VOICE_EN, MURF_VOICE_TA, GROQ_API_KEY, HUGGINGFACE_API_KEY, IMAGES_DIR
+from config import OUTPUT_DIR, MURF_VOICE_EN, MURF_VOICE_TA, GROQ_API_KEY, IMAGES_DIR
 from image_generator import ImageGenerator
 
 
@@ -35,20 +35,18 @@ class TeacherChatbot:
         self.image_generator = None
         print(f"[TeacherChatbot] Checking image generator initialization...")
         print(f"[TeacherChatbot] GROQ_API_KEY present: {bool(GROQ_API_KEY)}")
-        print(f"[TeacherChatbot] HUGGINGFACE_API_KEY present: {bool(HUGGINGFACE_API_KEY)}")
         
-        if GROQ_API_KEY and HUGGINGFACE_API_KEY:
+        if GROQ_API_KEY:
             try:
                 self.image_generator = ImageGenerator(
                     groq_api_key=GROQ_API_KEY,
-                    huggingface_api_key=HUGGINGFACE_API_KEY,
                     output_dir=IMAGES_DIR
                 )
-                print("[TeacherChatbot] ✅ Image generator initialized (FLUX Schnell via Hugging Face)")
+                print("[TeacherChatbot] ✅ Image generator initialized (Pollinations.ai - Free, No Auth)")
             except Exception as e:
                 print(f"[TeacherChatbot] ❌ Image generator initialization failed: {e}")
         else:
-            print("[TeacherChatbot] ❌ Image generator disabled (missing API keys)")
+            print("[TeacherChatbot] ❌ Image generator disabled (missing GROQ_API_KEY)")
 
     def _normalize_language(self, language_hint):
         if not language_hint:
