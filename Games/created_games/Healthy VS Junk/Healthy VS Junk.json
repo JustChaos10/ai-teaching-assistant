@@ -1,0 +1,36 @@
+{
+    "title": "Healthy VS Junk",
+    "template": "Binary Choice",
+    "items": [
+        {
+            "image_path": "apple.jpg",
+            "question": "What is this?",
+            "answer": "yes"
+        },
+        {
+            "image_path": "broccoli.jpg",
+            "question": "What is this?",
+            "answer": "yes"
+        },
+        {
+            "image_path": "burger.jpg",
+            "question": "What is this?",
+            "answer": "no"
+        },
+        {
+            "image_path": "carrot.jpg",
+            "question": "What is this?",
+            "answer": "yes"
+        },
+        {
+            "image_path": "donut.jpg",
+            "question": "What is this?",
+            "answer": "no"
+        },
+        {
+            "image_path": "pizza.jpg",
+            "question": "What is this?",
+            "answer": "no"
+        }
+    ]
+}

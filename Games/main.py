@@ -5,6 +5,7 @@ import json
 import sys
 import threading
 import cv2
+from pathlib import Path
 
 from templates.binary_choice import BinaryChoiceGame
 from templates.numeric_input import NumericInputGame
@@ -23,6 +24,10 @@ class GameLauncherApp:
     def __init__(self, root):
         self.root = root
         self.root.title("🎈 Kids Game Hub 🎈")
+        
+        # Get the absolute path to the Games directory
+        self.script_dir = Path(__file__).parent.resolve()
+        self.created_games_dir = self.script_dir / "created_games"
         
         start_w, start_h = 720, 800
         self.root.geometry(f"{start_w}x{start_h}")
@@ -73,25 +78,59 @@ class GameLauncherApp:
         exit_button.grid(row=2, column=0, sticky="ew", padx=20, pady=10)
 
     def create_widgets(self):
-        card = tk.Frame(self.root, bg=self.card_bg, padx=16, pady=16, highlightthickness=0, bd=0)
-        card.grid(row=1, column=0, sticky="nsew", padx=20, pady=(10, 10))
-        card.grid_columnconfigure(0, weight=1)
+        # Create a container frame for the card with scrollbar
+        container = tk.Frame(self.root, bg="#FFF6D5")
+        container.grid(row=1, column=0, sticky="nsew", padx=20, pady=(10, 10))
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(0, weight=1)
 
-        games_dir = "created_games"
-        if not os.path.exists(games_dir):
-            ttk.Label(card, text="'created_games' directory not found.", font=("Helvetica", 12)).pack(pady=20)
+        # Create canvas and scrollbar
+        canvas = tk.Canvas(container, bg=self.card_bg, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
+        
+        # Create the scrollable frame
+        scrollable_frame = tk.Frame(canvas, bg=self.card_bg, padx=16, pady=16)
+        
+        # Configure canvas scrolling
+        def _configure_scroll_region(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+            # Center the scrollable frame in the canvas
+            canvas_width = canvas.winfo_width()
+            frame_width = scrollable_frame.winfo_reqwidth()
+            x_position = max(0, (canvas_width - frame_width) // 2)
+            canvas.coords(canvas_window, x_position, 0)
+        
+        scrollable_frame.bind("<Configure>", _configure_scroll_region)
+        
+        canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="n")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Recenter when canvas is resized
+        canvas.bind("<Configure>", _configure_scroll_region)
+        
+        # Pack canvas and scrollbar
+        canvas.grid(row=0, column=0, sticky="nsew")
+        scrollbar.grid(row=0, column=1, sticky="ns")
+        
+        # Enable mouse wheel scrolling
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+
+        if not self.created_games_dir.exists():
+            ttk.Label(scrollable_frame, text="'created_games' directory not found.", font=("Helvetica", 12)).pack(pady=20)
             return
 
         game_files = []
-        for game_name in sorted(os.listdir(games_dir)):
-            game_dir = os.path.join(games_dir, game_name)
-            if os.path.isdir(game_dir):
-                game_file = os.path.join(game_dir, f"{game_name}.json")
-                if os.path.exists(game_file):
-                    game_files.append((game_name, game_file))
+        for game_dir in sorted(self.created_games_dir.iterdir()):
+            if game_dir.is_dir():
+                game_name = game_dir.name
+                game_file = game_dir / f"{game_name}.json"
+                if game_file.exists():
+                    game_files.append((game_name, str(game_file)))
 
         if not game_files:
-            ttk.Label(card, text="No games found.", font=("Helvetica", 12)).pack(pady=20)
+            ttk.Label(scrollable_frame, text="No games found.", font=("Helvetica", 12)).pack(pady=20)
             return
 
         BTN_FONT = ("Comic Sans MS", 20, "bold")
@@ -107,7 +146,7 @@ class GameLauncherApp:
             emoji = emojis[row % len(emojis)]
 
             btn = tk.Button(
-                card,
+                scrollable_frame,
                 text=f"{emoji}  {game_name}",
                 font=BTN_FONT,
                 height=BTN_HEIGHT,
@@ -121,7 +160,7 @@ class GameLauncherApp:
                 cursor="hand2",
                 command=lambda g=game_file: self.launch_game(g)
             )
-            btn.grid(row=row, column=0, sticky="ew", padx=36, pady=GAP_Y)
+            btn.pack(fill="x", pady=GAP_Y, padx=36)
             btn.bind("<Enter>", lambda e, b=btn, col=hover_color: on_enter(e, b, col))
             btn.bind("<Leave>", lambda e, b=btn, col=base_color, fgc="#1B2836": on_leave(e, b, col, fgc))
             row += 1
@@ -132,44 +171,90 @@ class GameLauncherApp:
 
     def launch_game(self, game_file):
         try:
+            print(f"[DEBUG] Loading game file: {game_file}")
             with open(game_file, 'r') as f:
                 game_data = json.load(f)
+            print(f"[DEBUG] Game data loaded: {game_data.get('title')}")
         except (json.JSONDecodeError, FileNotFoundError) as e:
-            messagebox.showerror("Error", f"Failed to load game data: {e}")
+            error_msg = f"Failed to load game data: {e}"
+            print(f"[ERROR] {error_msg}")
+            messagebox.showerror("Error", error_msg)
             return
 
         template_name = game_data.get("template")
         game = None
 
-        game_directory = os.path.dirname(game_file)
+        # Use Path for proper path handling
+        game_directory = str(Path(game_file).parent)
+        print(f"[DEBUG] Game directory: {game_directory}")
+        print(f"[DEBUG] Template: {template_name}")
 
         if template_name == "Binary Choice":
-            game = BinaryChoiceGame(game_data, game_directory, self.app_stop_event)
+            try:
+                game = BinaryChoiceGame(game_data, game_directory, self.app_stop_event)
+            except Exception as e:
+                import traceback
+                error_msg = f"Failed to initialize Binary Choice game: {e}\n{traceback.format_exc()}"
+                print(f"[ERROR] {error_msg}")
+                messagebox.showerror("Error", str(e))
+                return
         elif template_name == "Numeric Input":
-            game = NumericInputGame(game_data, game_directory, self.app_stop_event)
+            try:
+                game = NumericInputGame(game_data, game_directory, self.app_stop_event)
+            except Exception as e:
+                import traceback
+                error_msg = f"Failed to initialize Numeric Input game: {e}\n{traceback.format_exc()}"
+                print(f"[ERROR] {error_msg}")
+                messagebox.showerror("Error", str(e))
+                return
         elif template_name == "Puzzle":
+            # Handle both absolute and relative paths
             image_path = game_data.get("image_path")
+            if not os.path.isabs(image_path):
+                image_path = os.path.join(game_directory, image_path)
+            
+            print(f"[DEBUG] Puzzle image path: {image_path}")
+            print(f"[DEBUG] Puzzle image exists: {os.path.exists(image_path)}")
+                
             if not image_path or not os.path.exists(image_path):
-                messagebox.showerror("Error", f"Puzzle image not found at: {image_path}")
+                error_msg = f"Puzzle image not found at: {image_path}"
+                print(f"[ERROR] {error_msg}")
+                messagebox.showerror("Error", error_msg)
                 return
             
             img = cv2.imread(image_path)
             if img is None:
-                messagebox.showerror("Error", f"Failed to load or decode puzzle image. Please check the file: {image_path}")
+                error_msg = f"Failed to load or decode puzzle image. Please check the file: {image_path}"
+                print(f"[ERROR] {error_msg}")
+                messagebox.showerror("Error", error_msg)
                 return
             
-            game = PuzzleGame(game_data, game_directory, self.app_stop_event)
+            try:
+                game = PuzzleGame(game_data, game_directory, self.app_stop_event)
+            except Exception as e:
+                import traceback
+                error_msg = f"Failed to initialize Puzzle game: {e}\n{traceback.format_exc()}"
+                print(f"[ERROR] {error_msg}")
+                messagebox.showerror("Error", str(e))
+                return
 
         if game:
             self.root.withdraw()
             try:
+                print(f"[DEBUG] Starting game...")
                 game.run()
+                print(f"[DEBUG] Game ended normally")
             except Exception as e:
-                messagebox.showerror("Game Error", f"An error occurred during the game: {e}")
+                import traceback
+                error_msg = f"An error occurred during the game: {e}\n{traceback.format_exc()}"
+                print(f"[ERROR] {error_msg}")
+                messagebox.showerror("Game Error", str(e))
             finally:
                 self.root.deiconify()
         else:
-            messagebox.showerror("Error", f"Unknown or missing game template: '{template_name}'")
+            error_msg = f"Unknown or missing game template: '{template_name}'"
+            print(f"[ERROR] {error_msg}")
+            messagebox.showerror("Error", error_msg)
 
 if __name__ == "__main__":
     root = tk.Tk()
