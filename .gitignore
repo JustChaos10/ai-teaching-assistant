@@ -1,6 +1,9 @@
 # --- ENVIRONMENTS ---
 venv310/
 .env
+.env.*
+**/.env
+**/.env.*
 .venv/
 env/
 venv/
@@ -13,55 +16,24 @@ __pycache__/
 *.pyd
 *$py.class
 
+# --- NODE MODULES ---
+node_modules/
+**/node_modules/
+
 # --- OUTPUTS & TEMP FILES ---
 outputs/
 *.log
 *.tmp
 *.wav
-*.json
 tempCodeRunnerFile.*
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-.pytest_cache/
-.hypothesis/
 
-# --- DISTRIBUTION / PACKAGING ---
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+# --- GENERATED IMAGES ---
+new-backend/static/generated_images/
+**/static/generated_images/*.png
 
-# --- PYINSTALLER ---
-*.manifest
-*.spec
-
-# --- JUPYTER NOTEBOOK ---
-.ipynb_checkpoints
-
-# --- FRONTEND / NODE ---
-node_modules/
-dist/
-build/
-*.lock
+# --- OS FILES ---
+.DS_Store
+Thumbs.db
 
 # --- IDEs and EDITORS ---
 .vscode/
@@ -72,25 +44,7 @@ build/
 *.ipr
 *.iws
 
-# --- LOGS AND DEBUG ---
-*.log
-*.pot
-*.pyc
-
-# --- OS FILES ---
-.DS_Store
-Thumbs.db
-
-# --- OTHER FILES TO IGNORE ---
-*.exe
-
-# Large model files (excluded from GitHub)
+# --- LARGE MODEL FILES ---
 asset/gpt/
 asset/*.safetensors
 backup_models/
-
-# BudgetBridge 2 specific ignores
-BudgetBridge 2/node_modules/
-BudgetBridge 2/dist/
-BudgetBridge 2/.local/
-

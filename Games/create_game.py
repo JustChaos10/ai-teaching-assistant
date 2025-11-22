@@ -4,12 +4,30 @@ from tkinter import ttk, filedialog, messagebox
 import os
 import json
 import shutil
+from pathlib import Path
+import sys
+from datetime import datetime
 
 class GameCreationApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Game Creator & Manager")
         self.root.geometry("700x600")
+
+        # Get the absolute path to the Games directory
+        self.script_dir = Path(__file__).parent.resolve()
+        self.created_games_dir = self.script_dir / "created_games"
+        
+        # Create a log file for debugging
+        self.log_file = self.script_dir / "game_creator_debug.log"
+        self.log(f"=== Game Creator Started at {datetime.now()} ===")
+        self.log(f"Script directory: {self.script_dir}")
+        self.log(f"Created games directory: {self.created_games_dir}")
+        self.log(f"Current working directory: {os.getcwd()}")
+        
+        # Ensure created_games directory exists
+        self.created_games_dir.mkdir(exist_ok=True)
+        self.log(f"Created games directory exists: {self.created_games_dir.exists()}")
 
         self.template_var = tk.StringVar()
         self.game_name_var = tk.StringVar()
@@ -21,6 +39,14 @@ class GameCreationApp:
 
         self.create_widgets()
         self.refresh_game_list()
+    
+    def log(self, message):
+        """Write debug messages to log file"""
+        try:
+            with open(self.log_file, 'a', encoding='utf-8') as f:
+                f.write(f"{message}\n")
+        except Exception as e:
+            print(f"Failed to write to log: {e}")
 
     def create_widgets(self):
         # Main paned window
@@ -86,12 +112,11 @@ class GameCreationApp:
         for widget in self.game_list_frame.winfo_children():
             widget.destroy()
 
-        games_dir = "created_games"
-        if not os.path.exists(games_dir):
+        if not self.created_games_dir.exists():
             ttk.Label(self.game_list_frame, text="'created_games' directory not found.").pack()
             return
 
-        game_names = sorted([d for d in os.listdir(games_dir) if os.path.isdir(os.path.join(games_dir, d))])
+        game_names = sorted([d.name for d in self.created_games_dir.iterdir() if d.is_dir()])
         if not game_names:
             ttk.Label(self.game_list_frame, text="No games found.").pack()
             return
@@ -115,7 +140,7 @@ class GameCreationApp:
 
         try:
             for game_name in selected_games:
-                game_dir = os.path.join("created_games", game_name)
+                game_dir = self.created_games_dir / game_name
                 shutil.rmtree(game_dir)
             messagebox.showinfo("Success", "Selected games have been deleted.")
             self.refresh_game_list()
@@ -176,37 +201,93 @@ class GameCreationApp:
     def save_game(self):
         game_name = self.game_name_var.get()
         template = self.template_var.get()
+        
+        self.log(f"\n=== Attempting to save game ===")
+        self.log(f"Game name: {game_name}")
+        self.log(f"Template: {template}")
+        self.log(f"Number of images: {len(self.image_paths)}")
+        
         if not game_name or not template or not self.image_paths:
             messagebox.showerror("Error", "Please fill in all fields and add images.")
+            self.log("ERROR: Missing required fields")
             return False
         try:
-            game_dir = os.path.join("created_games", game_name)
-            os.makedirs(game_dir, exist_ok=True)
+            game_dir = self.created_games_dir / game_name
+            self.log(f"Target game directory: {game_dir}")
+            
+            game_dir.mkdir(parents=True, exist_ok=True)
+            self.log(f"Game directory created/verified: {game_dir.exists()}")
+            
             game_data = {"title": game_name, "template": template, "items": []}
             if template in ["Binary Choice", "Numeric Input"]:
-                for path in self.image_paths:
-                    new_path = os.path.join(game_dir, os.path.basename(path))
-                    shutil.copy(path, new_path)
-                    game_data["items"].append({"image_path": new_path, "question": "What is this?", "answer": self.answers[path].get()})
+                for idx, path in enumerate(self.image_paths):
+                    image_filename = os.path.basename(path)
+                    new_path = game_dir / image_filename
+                    
+                    self.log(f"Copying image {idx + 1}/{len(self.image_paths)}")
+                    self.log(f"  Source: {path}")
+                    self.log(f"  Source exists: {os.path.exists(path)}")
+                    self.log(f"  Destination: {new_path}")
+                    
+                    shutil.copy(str(path), str(new_path))
+                    
+                    self.log(f"  Copy successful: {new_path.exists()}")
+                    
+                    # Store only the filename, not the full path
+                    game_data["items"].append({
+                        "image_path": image_filename, 
+                        "question": "What is this?", 
+                        "answer": self.answers[path].get()
+                    })
             elif template == "Puzzle":
                 path = self.image_paths[0]
-                new_path = os.path.join(game_dir, os.path.basename(path))
-                shutil.copy(path, new_path)
-                game_data["image_path"] = new_path
+                image_filename = os.path.basename(path)
+                new_path = game_dir / image_filename
+                
+                self.log(f"Copying puzzle image")
+                self.log(f"  Source: {path}")
+                self.log(f"  Source exists: {os.path.exists(path)}")
+                self.log(f"  Destination: {new_path}")
+                
+                shutil.copy(str(path), str(new_path))
+                self.log(f"  Copy successful: {new_path.exists()}")
+                
+                # Store only the filename, not the full path
+                game_data["image_path"] = image_filename
                 game_data["rows"] = self.answers['rows'].get()
 
             if self.music_path:
                 music_filename = os.path.basename(self.music_path)
-                new_music_path = os.path.join(game_dir, music_filename)
-                shutil.copy(self.music_path, new_music_path)
+                new_music_path = game_dir / music_filename
+                self.log(f"Copying music: {self.music_path} -> {new_music_path}")
+                shutil.copy(str(self.music_path), str(new_music_path))
                 game_data["bg_music"] = music_filename
-            json_path = os.path.join(game_dir, f"{game_name}.json")
+                
+            json_path = game_dir / f"{game_name}.json"
+            self.log(f"Writing JSON to: {json_path}")
+            
             with open(json_path, 'w') as f:
                 json.dump(game_data, f, indent=4)
+            
+            self.log(f"Game created successfully!")
+            self.log(f"JSON content: {json.dumps(game_data, indent=2)}")
+            
             messagebox.showinfo("Success", f"Game '{game_name}' created successfully!")
             self.refresh_game_list()
             return True
         except Exception as e:
+            import traceback
+            error_msg = f"Failed to create game: {e}\n{traceback.format_exc()}"
+            self.log(f"ERROR: {error_msg}")
+            messagebox.showerror("Error", f"Failed to create game: {e}")
+            return False
+            messagebox.showinfo("Success", f"Game '{game_name}' created successfully!")
+            self.refresh_game_list()
+            return True
+        except Exception as e:
+            import traceback
+            error_msg = f"Failed to create game: {e}\n\n{traceback.format_exc()}"
+            print(error_msg)  # Print to console for debugging
             messagebox.showerror("Error", f"Failed to create game: {e}")
             return False
 

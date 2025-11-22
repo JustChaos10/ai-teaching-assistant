@@ -71,8 +71,8 @@ def draw_finger_circles(frame, hand_landmarks, finger_status):
             tip_y = int(tip_landmark.y * height)
             
             # Draw a filled red circle with a white border
-            cv2.circle(frame, (tip_x, tip_y), 15, (0, 255, 0), -1)
-            cv2.circle(frame, (tip_x, tip_y), 15, (255, 255, 255), 2)
+            cv2.circle(frame, (tip_x, tip_y), 22, (0, 255, 0), -1)
+            cv2.circle(frame, (tip_x, tip_y), 22, (255, 255, 255), 2)
 
 class FingerCounter:
     def __init__(self):
