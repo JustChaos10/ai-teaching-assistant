@@ -8,7 +8,8 @@ from faster_whisper import WhisperModel
 from pathlib import Path
 from rag_system import RAGSystem
 from teacher_chatbot import auto_ingest_docs, clean_text
-from config import OUTPUT_DIR, MURF_VOICE_EN, MURF_VOICE_TA
+from config import OUTPUT_DIR, MURF_VOICE_EN, MURF_VOICE_TA, GROQ_API_KEY, HUGGINGFACE_API_KEY, IMAGES_DIR
+from image_generator import ImageGenerator
 
 
 pygame.mixer.init()
@@ -29,6 +30,25 @@ class TeacherChatbot:
             "ta": MURF_VOICE_TA or MURF_VOICE_EN,
         }
         OUTPUT_DIR.mkdir(exist_ok=True)
+        
+        # ---------------- IMAGE GENERATOR ----------------
+        self.image_generator = None
+        print(f"[TeacherChatbot] Checking image generator initialization...")
+        print(f"[TeacherChatbot] GROQ_API_KEY present: {bool(GROQ_API_KEY)}")
+        print(f"[TeacherChatbot] HUGGINGFACE_API_KEY present: {bool(HUGGINGFACE_API_KEY)}")
+        
+        if GROQ_API_KEY and HUGGINGFACE_API_KEY:
+            try:
+                self.image_generator = ImageGenerator(
+                    groq_api_key=GROQ_API_KEY,
+                    huggingface_api_key=HUGGINGFACE_API_KEY,
+                    output_dir=IMAGES_DIR
+                )
+                print("[TeacherChatbot] ✅ Image generator initialized (FLUX Schnell via Hugging Face)")
+            except Exception as e:
+                print(f"[TeacherChatbot] ❌ Image generator initialization failed: {e}")
+        else:
+            print("[TeacherChatbot] ❌ Image generator disabled (missing API keys)")
 
     def _normalize_language(self, language_hint):
         if not language_hint:
@@ -80,15 +100,64 @@ class TeacherChatbot:
 
     # ---------------- Full pipeline ----------------
     def pipeline(self, audio_path, language_hint=None):
+        print(f"\n{'='*60}")
+        print(f"[Pipeline] Starting pipeline...")
+        
         question, detected_language = self.stt(audio_path, language_hint=language_hint)
+        print(f"[Pipeline] Question: {question}")
+        
         answer_language = detected_language or "en"
         answer, emotion = self.query_chatbot(question, target_language=answer_language)
+        print(f"[Pipeline] Answer: {answer[:100]}...")
+        
         tts_file = self.tts(answer, target_language=answer_language)
+        print(f"[Pipeline] TTS generated: {tts_file}")
+
+        # ---------------- Generate images if enabled ----------------
+        image_urls = []
+        print(f"[Pipeline] Image generator available: {self.image_generator is not None}")
+        
+        if self.image_generator:
+            try:
+                print(f"[Pipeline] 🎨 Starting image generation...")
+                print(f"[Pipeline] Answer text for analysis: '{answer}'")
+                
+                images = self.image_generator.generate_images_for_teaching(answer)
+                print(f"[Pipeline] Generated {len(images)} images")
+                
+                # Convert file paths to URLs for frontend
+                for img in images:
+                    # Path is already relative (e.g., static/generated_images/xxx.png)
+                    # Just ensure forward slashes and add leading /
+                    path_str = str(img["path"]).replace("\\", "/")
+                    if not path_str.startswith("/"):
+                        path_str = "/" + path_str
+                    
+                    image_urls.append({
+                        "url": path_str,
+                        "description": img["description"],
+                        "step": img["step"],
+                        "start_time": img.get("start_time", 0),
+                        "duration": img.get("duration", 3.0)
+                    })
+                    print(f"[Pipeline] Image {img['step']}: {path_str} (start: {img.get('start_time', 0)}s, duration: {img.get('duration', 3)}s)")
+                
+                print(f"[Pipeline] ✅ Successfully generated {len(image_urls)} image URLs")
+            except Exception as e:
+                print(f"[Pipeline] ❌ Error generating images: {e}")
+                import traceback
+                traceback.print_exc()
+                # Continue without images
+        else:
+            print(f"[Pipeline] ⚠️ Image generator not initialized, skipping images")
+
+        print(f"{'='*60}\n")
 
         return {
             "question": question,
             "answer": answer,
             "language": answer_language,
             "audio_url": str(tts_file),
-            "emotion": emotion
+            "emotion": emotion,
+            "images": image_urls  # New field with image URLs
         }

@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import requests
 from teacher_chatbot_app import TeacherChatbot
 from pathlib import Path
@@ -9,12 +10,13 @@ import shutil
 import os
 import subprocess
 import sys
-from config import MURF_API_KEY, LECTURE_API_BASE, OUTPUT_DIR
+from config import MURF_API_KEY, LECTURE_API_BASE, OUTPUT_DIR, IMAGES_DIR
 
 SUPPORTED_STT_LANGUAGES = {"auto", "en", "ta"}
 
 # ---------------- CONFIG ----------------
 OUTPUT_DIR.mkdir(exist_ok=True)
+IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 
 # Initialize FastAPI
 app = FastAPI(title="AI Teaching Assistant Backend")
@@ -26,6 +28,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount static directory for generated images
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # ---------------- CHATBOT INIT ----------------
 chatbot = TeacherChatbot(
@@ -65,7 +70,8 @@ async def ask(file: UploadFile, language: str = "auto"):
             "answer": result["answer"],
             "language": result.get("language", "en"),
             "audio_url": f"/audio/{Path(result['audio_url']).name}",
-            "emotion": result["emotion"]
+            "emotion": result["emotion"],
+            "images": result.get("images", [])  # Include generated images
         })
 
     except Exception as e:

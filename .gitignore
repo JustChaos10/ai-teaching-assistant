@@ -27,6 +27,10 @@ outputs/
 *.wav
 tempCodeRunnerFile.*
 
+# --- GENERATED IMAGES ---
+new-backend/static/generated_images/
+**/static/generated_images/*.png
+
 # --- OS FILES ---
 .DS_Store
 Thumbs.db
