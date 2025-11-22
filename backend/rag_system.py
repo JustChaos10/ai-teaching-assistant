@@ -240,15 +240,23 @@ class RAGSystem:
     def get_document_count(self) -> int:
         return self.vector_store.index.ntotal if self.vector_store else 0
 
+    def detect_language(self, text: str) -> str:
+        """Detect if the text contains Tamil characters."""
+        # Tamil Unicode range: U+0B80 to U+0BFF
+        tamil_pattern = r'[\u0B80-\u0BFF]'
+        if re.search(tamil_pattern, text):
+            return "tamil"
+        return "english"
+
     def detect_subject_and_intent(self, question: str) -> Dict[str, str]:
         question_lower = question.lower().strip()
-        
+
         subject = "general"
         if any(word in question_lower for word in ["math", "number", "count", "add", "subtract", "plus", "minus", "multiply", "divide"]):
             subject = "math"
         elif any(word in question_lower for word in ["read", "story", "letter", "word", "english", "spell"]):
             subject = "reading"
-        
+
         intent = "question"
         if any(phrase in question_lower for phrase in ["teach me", "learn", "help me", "show me how"]):
             intent = "learn"
@@ -256,28 +264,34 @@ class RAGSystem:
             intent = "explore"
         elif any(phrase in question_lower for phrase in ["practice", "exercise", "quiz", "test"]):
             intent = "practice"
-        
+
         return {"subject": subject, "intent": intent}
 
     def should_use_rag(self, question: str) -> bool:
         if not self.embeddings_available:
             return False
-            
+
+        # Skip RAG for Tamil questions to avoid hallucinations from English embeddings
+        language = self.detect_language(question)
+        if language == "tamil":
+            print("[INFO] Tamil question detected - using general knowledge (skipping RAG)")
+            return False
+
         analysis = self.detect_subject_and_intent(question)
-        
+
         if self.vector_store and self.get_document_count() > 0:
             if analysis["intent"] in ["learn", "explore", "practice"]:
                 return True
             if analysis["subject"] in ["math", "reading"]:
                 return True
-        
+
         greetings = ["hello", "hi", "thanks", "bye", "good morning", "how are you"]
         if any(greeting in question.lower() for greeting in greetings):
             return False
-        
+
         if re.search(r'\d+\s*[+\-*/]\s*\d+', question):
             return False
-        
+
         return self.vector_store is not None and self.get_document_count() > 0
 
     def evaluate_simple_math(self, question: str) -> Optional[str]:
