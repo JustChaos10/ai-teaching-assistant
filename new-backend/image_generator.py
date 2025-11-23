@@ -71,7 +71,7 @@ Example for "Let's count! We have 2 apples here. Now we add 3 oranges. Together 
 ]
 
 Rules:
-- Max 7 images
+- Max 2 images
 - Duration should be in seconds (decimal)
 - Sum of all durations should approximately equal total speaking time
 - Each image should cover a distinct concept/step

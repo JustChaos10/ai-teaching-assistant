@@ -132,7 +132,7 @@ export default function App() {
       setLectures(Array.isArray(data) ? data : []);
     } catch (e) { console.error(e); }
   }
-  useEffect(() => { /* loadLectures(); */ }, []);
+  useEffect(() => { loadLectures(); }, []);
 
   async function createLectureFromText() {
     if (!lectureText.trim()) return;
