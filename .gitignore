@@ -1,0 +1,50 @@
+# --- ENVIRONMENTS ---
+venv310/
+.env
+.env.*
+**/.env
+**/.env.*
+.venv/
+env/
+venv/
+ENV/
+
+# --- PYTHON CACHE ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*$py.class
+
+# --- NODE MODULES ---
+node_modules/
+**/node_modules/
+
+# --- OUTPUTS & TEMP FILES ---
+outputs/
+*.log
+*.tmp
+*.wav
+tempCodeRunnerFile.*
+
+# --- GENERATED IMAGES ---
+new-backend/static/generated_images/
+**/static/generated_images/*.png
+
+# --- OS FILES ---
+.DS_Store
+Thumbs.db
+
+# --- IDEs and EDITORS ---
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.iml
+*.ipr
+*.iws
+
+# --- LARGE MODEL FILES ---
+asset/gpt/
+asset/*.safetensors
+backup_models/

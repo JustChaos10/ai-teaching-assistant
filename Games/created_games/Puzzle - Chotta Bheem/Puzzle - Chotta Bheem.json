@@ -1,0 +1,8 @@
+{
+    "title": "Puzzle - Chotta Bheem",
+    "template": "Puzzle",
+    "items": [],
+    "image_path": "bheem.jpg",
+    "rows": 4,
+    "bg_music": "bg_music_bheem.wav"
+}

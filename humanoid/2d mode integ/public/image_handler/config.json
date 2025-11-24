@@ -1,0 +1,26 @@
+{
+  "apiProvider": "gemini",
+  "apiKeys": {
+    "gemini": "YOUR_GEMINI_API_KEY_HERE",
+    "openai": "YOUR_OPENAI_API_KEY_HERE",
+    "stabilityai": "YOUR_STABILITY_AI_KEY_HERE"
+  },
+  "imageSettings": {
+    "width": 512,
+    "height": 512,
+    "style": "simple, colorful, educational, child-friendly",
+    "quality": "standard",
+    "cacheEnabled": true
+  },
+  "slideshowSettings": {
+    "transitionDelay": 2000,
+    "autoPlay": true,
+    "loop": false
+  },
+  "textAnalysis": {
+    "enableNumberDetection": true,
+    "enableObjectDetection": true,
+    "enableMathOperations": true,
+    "educationalContext": "grade 1-2 students"
+  }
+}

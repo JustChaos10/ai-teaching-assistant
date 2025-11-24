@@ -1,0 +1,16 @@
+{
+    "title": "nitk logo",
+    "template": "Binary Choice",
+    "items": [
+        {
+            "image_path": "1Picture1.png",
+            "question": "What is this?",
+            "answer": "no"
+        },
+        {
+            "image_path": "1Picture1.png",
+            "question": "What is this?",
+            "answer": "no"
+        }
+    ]
+}
